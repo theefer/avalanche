@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+  require = ({
+    paths: {
+      'jquery': 'lib/jquery',
+      'promise': 'lib/promise'
+    },
+    shim: {
+      'jquery': {
+        exports: '$'
+      },
+      'promise': {
+        exports: 'Deferred'
+//        exports: 'Promise'
+      }
+    }
+  });
+  exports = {}
+</script>
+  <script data-main="sandbox-resource" src="lib/require.js"></script>
+</head>
+<body>
+</body>
+</html>
