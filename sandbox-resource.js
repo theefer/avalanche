@@ -1,7 +1,7 @@
 // -*- js2 *-*
 
-var Promise
-var LinkNotFound
+define(['jquery', 'promise'],
+       function($, Promise) {
 
 var HttpJqueryAdapter = function() {
 
@@ -14,10 +14,13 @@ var HttpJqueryAdapter = function() {
       // FIXME:
       // accepts: '',
       // cache, processData, etc (params/options?)
-      success: function(response) {
-        promise.resolve(response);
+      success: function(response, textStatus, req) {
+        // console.log("success:", arguments, req.getAllResponseHeaders())
+        var contentType = req.getResponseHeader('Content-Type');
+        promise.resolve({body: response, contentType: contentType});
       },
       error: function(jqXHR, textStatus, errorThrown) {
+        console.log("error:", arguments)
         var error = {}; // ???
         promise.reject(error);
       }
@@ -92,7 +95,6 @@ var Http = function(uri) {
 };
 
 var Resource = function(uri, data) {
-  // var data = _origData;
   var loaded = false;
 
 
@@ -107,15 +109,74 @@ var Resource = function(uri, data) {
 
   var backend = new Http(uri); // FIXME: or from options
 
+  function get(params) {
+    // FIXME: cache
+    return backend.get(params).then(function(resp) {
+      return resp.body;
+    });
+  }
+
+  function put(data) {
+    // FIXME: cache
+    return backend.put(data).then(function(resp) {
+      return resp.body;
+    });
+  }
+
+  function post(data) {
+    // FIXME: cache
+    return backend.post(data).then(function(resp) {
+      return resp.body;
+    });
+  }
+
+  function del() {
+    // FIXME: cache
+    return backend.del().then(function(resp) {
+      return resp.body;
+    });
+  }
+
   /**
    * @return a new Promise(Resource)
    */
   function fetch(params) {
-    return backend.get(params).map(function(fetchedData) {
+    return backend.get(params).then(function(fetched) {
       // FIXME: multiplex resource class based on mediaType?
-      // return new resourceClass(uri, fetchedData);
-      return new Resource(uri, fetchedData);
+      // var contentType = fetched.contentType;
+      // var resourceClass;
+      // switch (contentType) {
+      // case 'application/collection+json':
+      //   break;
+      // case 'application/object+json':
+      //   break;
+      // default:
+      //   resourceClass = Resource;
+      //   break;
+      // }
+      // return new resourceClass(uri, fetched.body);
+      return new Resource(uri, fetched.body);
     });
+  }
+
+  function uriTemplate(template, params) {
+    return template.replace(/{(.*?)}/g, function(match, varName) {
+      var val = params[varName];
+      if (!val) {
+        throw new Error("Missing parameter for URI template variable: " + varName)
+      }
+      return val;
+    });
+  }
+
+  function findRel(links, rel) {
+    // FIXME: better lookup
+    for (var i in links) {
+      var l = links[i];
+      if (l.rel == rel) {
+        return l.href;
+      }
+    }
   }
 
   /**
@@ -123,14 +184,16 @@ var Resource = function(uri, data) {
    * @throw LinkNotFound
    */
   function follow(rel, params) {
-    // return new Resource if link found
-    var rawLink = data && data.links && data.links[rel];
-    if (!rawLink) {
-      throw new LinkNotFound();
-    }
-    // TODO: substitute params
-    var link = fillLink(rawLink, params);
-    return link;
+    return get().then(function(body) {
+      var links = body && body.links,
+          rawLink = links && findRel(links, rel);
+      if (!rawLink) {
+        throw new Error("LinkNotFound");
+      }
+
+      var link = uriTemplate(rawLink, params);
+      return new Resource(link);
+    });
   }
 
   function as(resourceClass) {
@@ -139,10 +202,12 @@ var Resource = function(uri, data) {
 
 
   return {
-    get: backend.get,
-    put: backend.put,
-    post: backend.post,
-    delete: backend.del,
+    uri: uri,
+
+    get: get,
+    put: put,
+    post: post,
+    delete: del,
 
     fetch: fetch,
 
@@ -150,6 +215,39 @@ var Resource = function(uri, data) {
     as: as
   };
 };
+
+
+// TODO:
+// - ObjectResource
+// - ObjectClassResource
+// - CollectionResource
+
+// var ObjectResource = function(uri, data) {
+//   function read() {
+//     return get().then(function(body) {
+//       return body && body.data;
+//     });
+//   }
+//   function update() {
+//     return put().then(function(body) {
+//       // FIXME: update cache, extract data???
+//       return body;
+//     });
+//   }
+//   function destroy() {
+//     return del().then(function(body) {
+//       // FIXME: kill cache, extract data???
+//       return body;
+//     });
+//   }
+//   return {
+//     read: read,
+//     update: update,
+//     destroy: destroy
+//   };
+// };
+// ObjectResource.prototype = new Resource;
+// ObjectResource.prototype.constructor = ObjectResource;
 
 
 var Entity = function(mediaType, data) {
@@ -161,24 +259,79 @@ var Entity = function(mediaType, data) {
   };
 };
 
+var apiUri = 'http://localhost:4567/api';
+var httpAdapter = new HttpJqueryAdapter;
+httpAdapter.get(apiUri).then(function(data) {
+  console.log(data)
+});
 
 
-var Api;
-var apiUri;
+var http = new Http(apiUri);
+http.get().then(function(data) {
+  console.log(data)
+});
 
 
-var root = new Api(apiUri);
+var root = new Resource(apiUri);
+root.get().then(function(data) {
+  console.log(data)
+});
 
-// OR:
+root.fetch().then(function(data) {
+  console.log("fetched: ", data)
+});
+
+console.log("follow version")
 root.follow('version').then(function(res) {
-  res.get();
+  console.log(res)
+  res.get().then(function(x) {
+    console.log(x)
+  });
 });
 
-var dataProm = root.fetch();
-dataProm.then(function(data) {
-  console.log("root data", data);
-  // shows {"description": ...}
+console.log("follow user [Object]")
+root.follow('user', {id: 42}).then(function(res) {
+  console.log(res)
+  res.get().then(function(x) {
+    console.log(x)
+  });
+  res.fetch().then(function(x) {
+    console.log(x)
+  });
+
+  // res.read()
+  // res.write({name: 'New', email: 'new@example.com'})
+  // res.update({email: 'other@example.com'})
+  // res.destroy()
 });
+
+console.log("follow images [Collection]")
+root.follow('images').then(function(res) {
+  console.log("images:", res)
+  res.get().then(function(x) {
+    console.log(x)
+  });
+  res.fetch().then(function(x) {
+    console.log(x)
+  });
+});
+
+console.log("follow users [ObjectClass]")
+root.follow('users').then(function(res) {
+  console.log("users:", res)
+  res.follow('user', {id: 123}).then(function(ures) {
+    ures.get().then(function(x) {
+      console.log("user data: ", x)
+    });
+  });
+  // * res.create({name: 'Phil', email: 'phil@example.com'})
+  //   res.byId(345)
+  //   res.destroy(345)
+});
+
+
+return
+
 
 var imagesResource = root.follow('images');
 //imagesResource = imagesResource.as(ObjectClassResource)
@@ -188,13 +341,6 @@ newImageProm.then(function(newImage) {
   console.log("new image:", newImage)
 });
 
-var userResource = root.follow('user', {id: 666});
-var userResourceData = userResource.get();
-var userData = userResource.fetch();
-
-var versionResource = root.follow('version');
-var version = versionResource.get();
-
 /*
 
 /api
@@ -202,7 +348,7 @@ var version = versionResource.get();
 {
   "data": {
     "description": "Demo API"
-  }
+  },
   "links": [
     {"rel": "images",
      "href": "/images"},
@@ -248,8 +394,8 @@ var version = versionResource.get();
   "mediaType": "user", // ???
   "data": {
     "name": "Joe",
-    "email" "joe@example.com"
-  }
+    "email": "joe@example.com"
+  },
   "links": [
     {"rel": "friends",
      "href": "/user/{id}/friends"},
@@ -285,3 +431,5 @@ var version = versionResource.get();
 
 
 */
+
+});
