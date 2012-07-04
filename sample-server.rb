@@ -62,22 +62,73 @@ get '/api/users' do
 }'
 end
 
-get '/api/users/:id' do
-  id = params[:id]
+post '/api/users' do
   content_type 'application/object+json'
+  next_id = USERS.keys.max
+  data = JSON.parse(request.body.read)
+  user = USERS[next_id] = data
 '{
-  "uri": "/api/user/' +id+ '",
+  "uri": "/api/user/' +next_id.to_s+ '",
   "mediaType": "user",
   "data": {
-    "name": "Joe' +id+ '",
-    "email": "joe' +id+ '@example.com"
+    "id": "' +next_id.to_s+ '",
+    "name": "' +(user['name'] || '')+ '",
+    "email": "' +(user['email'] || '')+ '"
   },
   "links": [
-    {"rel": "friends", "href": "/api/users/' +id+ '/friends"},
-    {"rel": "avatar",  "href": "/api/users/' +id+ '/avatar"}
+    {"rel": "friends", "href": "/api/users/' +next_id.to_s+ '/friends"},
+    {"rel": "avatar",  "href": "/api/users/' +next_id.to_s+ '/avatar"}
   ]
 }'
 end
+
+USERS = {
+  123 => {:name => "Joe", :email => "joe@example.com"},
+  124 => {:name => "Jim", :email => "jim@example.com"},
+  125 => {:name => "Sam", :email => "sam@example.com"},
+}
+
+get '/api/users/:id' do
+  id = params[:id].to_i
+  content_type 'application/object+json'
+  user = USERS[id] or halt 404
+'{
+  "uri": "/api/user/' +id.to_s+ '",
+  "mediaType": "user",
+  "data": {
+    "id": "' +id.to_s+ '",
+    "name": "' +user[:name]+ '",
+    "email": "' +user[:email]+ '"
+  },
+  "links": [
+    {"rel": "friends", "href": "/api/users/' +id.to_s+ '/friends"},
+    {"rel": "avatar",  "href": "/api/users/' +id.to_s+ '/avatar"}
+  ]
+}'
+end
+
+put '/api/users/:id' do
+  id = params[:id].to_i
+  USERS[id] = JSON.parse(request.body.read)
+  content_type 'application/json'
+  nil
+end
+
+patch '/api/users/:id' do
+  id = params[:id].to_i
+  content_type 'application/object+json'
+  user = USERS[id] or halt 404
+  user.merge JSON.parse(request.body.read)
+  # FIXME: wrap in object?
+end
+
+delete '/api/users/:id' do
+  id = params[:id].to_i
+  USERS.delete(id)
+  content_type 'application/json'
+  nil
+end
+
 
 get '/api/user/:id/avatar' do
   content_type 'application/json'
