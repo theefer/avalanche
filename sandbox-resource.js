@@ -1,5 +1,34 @@
 // -*- js2 *-*
 
+// == compat ==
+
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {
+      // closest thing possible to the ECMAScript 5 internal IsCallable function
+      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var aArgs = Array.prototype.slice.call(arguments, 1), 
+        fToBind = this, 
+        fNOP = function () {},
+        fBound = function () {
+          return fToBind.apply(this instanceof fNOP
+                                 ? this
+                                 : oThis,
+                               aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    fNOP.prototype = this.prototype;
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+
+// == end compat ==
+
+
 define('HttpJqueryAdapter', ['jquery', 'promise'], function($, Promise) {
 
   return function() {
@@ -238,15 +267,12 @@ define('Http', ['HttpJqueryAdapter'], function(HttpJqueryAdapter) {
 
 
 
-define('Resource', ['Http'], function(Http) {
+define('Resource', ['Http', 'promise'], function(Http, Promise) {
 
   var Resource = function(uri, data) {
     this.uri = uri;
     this._data = data
     this._backend = new Http(uri); // FIXME: or from options
-
-    
-    // var loaded = false;
   };
 
   var resourceClassByContentType = Resource.prototype.resourceClassByContentType = {};
@@ -266,9 +292,18 @@ define('Resource', ['Http'], function(Http) {
 
   Resource.prototype.get = function(params) {
     // FIXME: cache
+if (this._data !== undefined) {
+    var promise = new Promise()
+    promise.resolve(this._data)
+console.log("IMMEDIATE resolve", this._data, this.uri)
+    return promise
+} else {
     return this._backend.get(params).then(function(resp) {
+console.log("CACHE NOW", this._data, this.uri)
+this._data = resp.body
       return resp.body;
     });
+}
   };
 
   Resource.prototype.put = function(data) {
@@ -296,13 +331,12 @@ define('Resource', ['Http'], function(Http) {
    * @return a new Promise(Resource)
    */
   Resource.prototype.fetch = function(params) {
-    var that = this; // FIXME: use bind
     return this._backend.get(params).then(function(fetched) {
       // Multiplex resource class based on mediaType
       var contentType = fetched.contentType;
       var resourceClass = resourceClassByContentType[contentType] || Resource;
-      return new resourceClass(that.uri, fetched.body);
-    });
+      return new resourceClass(this.uri, fetched.body);
+    }.bind(this));
   };
 
   function uriTemplate(template, params) {
@@ -364,8 +398,8 @@ define('ObjectResource', ['Resource'], function(Resource) {
       return body && body.data;
     });
   };
-  ObjectResource.prototype.update = function() {
-    return this.put().then(function(body) {
+  ObjectResource.prototype.update = function(data) {
+    return this.put(data).then(function(body) {
       // FIXME: update cache, extract data???
       return body;
     });
@@ -383,7 +417,7 @@ define('ObjectResource', ['Resource'], function(Resource) {
 });
 
 
-define('ObjectClassResource', ['Resource'], function(Resource) {
+define('ObjectClassResource', ['Resource', 'ObjectResource'], function(Resource, ObjectResource) {
   var ObjectClassResource = function(uri, data) {
     Resource.apply(this, arguments);
   };
@@ -394,7 +428,11 @@ define('ObjectClassResource', ['Resource'], function(Resource) {
   ObjectClassResource.prototype.create = function(data) {
     return this.post(data).then(function(body) {
       // FIXME: build new object resource???
-      return body && body.data;
+      // return body && body.data;
+console.log("BODY", body)
+// FIXME: auto cast to correct subclass? or use ObjectResource?
+var resource = new Resource(body.uri, body).as(ObjectResource)
+return resource
     });
   };
 
@@ -424,21 +462,54 @@ define('CollectionResource', ['Resource'], function(Resource) {
 
 
 
-define('Store', function() {
+define('Model', ['knockout', 'knockout.mapping'], function(ko, koMapping) {
+  var Model = function(resource) {
+    this.resource = resource
+
+    this.data = ko.observable(null)
+    this.state = ko.observable('loading') // ready, saving, loading, destroyed
+    // this.dirty = ko.observable(false)
+    // TODO: on data(newValue), mark as dirty?
+
+console.log("RESOURCE", resource)
+    resource.read().then(function(data) {
+      // var observable = koMapping.fromJS(data, that.data);
+      var observable = koMapping.fromJS(data);
+      this.data(observable)
+      this.state('ready')
+console.log("set data in Model", this, observable, this.data())
+    }.bind(this));
+  };
+
+
+
+  // Model.prototype.read = function() {
+  // };
+  // Model.prototype.write = function() {
+  // };
+
+  Model.prototype.destroy = function() {
+    return this.resource.destroy().then(function() {
+      this.state('destroyed')
+      this.data(null)
+    });
+  };
+
+  return Model;
+});
+
+
+define('Store', ['Model'], function(Model) {
   var Store = function(objectClassResource) {
     this.resource = objectClassResource;
+// FIXME: specify model class?
   };
 
   Store.prototype.create = function(data) {
-    // this.resource.create(data)
-    // wrap in resource
-    // wrap in model
-console.log("try", this)
-return this.resource.create(data)
-//     return this.resource.create(data).then(function(data) {
-// console.log("data", data)
-//       return data
-//     });
+    return this.resource.create(data).then(function(resource) {
+console.log("store create data", resource)
+      return new Model(resource)
+    });
   };
 
   Store.prototype.getById = function(data) {
@@ -448,23 +519,6 @@ return this.resource.create(data)
   };
 
   return Store;
-});
-
-define('Model', ['knockout'], function(ko) {
-  var Model = function(resource) {
-    this.resource = resource
-
-    this.data = ko.observable({})
-    this.state = ko.observable('loading') // ready, saving, loading, destroyed
-    this.dirty = ko.observable(false)
-  };
-
-  Model.prototype.destroy = function() {
-    this.resource.destroy()
-    this.state('destroyed')
-  };
-
-  return Model;
 });
 
 
@@ -576,14 +630,15 @@ root.follow('users').then(function(res) {
 root.follow('users').then(function(usersResource) {
 usersResource = usersResource.as(ObjectClassResource)
 var userStore = new Store(usersResource)
-
-
+console.log("user store", userStore)
 // create
 userStore.create({name: 'Adam', email: 'adam@example.com'}).then(function(userModel) {
+  console.log("store create: ", userModel)
   console.log(userModel.data())
 
   // update
   // userModel.data().name('Ada')
+  // userModel.write()
   // FIXME: track progress? errors?
 
   // userModel.saving(), .loading(), .dirty()
@@ -593,6 +648,8 @@ userStore.create({name: 'Adam', email: 'adam@example.com'}).then(function(userMo
   // delete
   // userModel.destroy()
   // FIXME: track progress? errors?
+}, function() {
+  console.log("store create error", arguments)
 });
 
 return;

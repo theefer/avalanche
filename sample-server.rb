@@ -68,7 +68,7 @@ post '/api/users' do
   data = JSON.parse(request.body.read)
   user = USERS[next_id] = data
 '{
-  "uri": "/api/user/' +next_id.to_s+ '",
+  "uri": "/api/users/' +next_id.to_s+ '",
   "mediaType": "user",
   "data": {
     "id": "' +next_id.to_s+ '",
@@ -83,9 +83,9 @@ post '/api/users' do
 end
 
 USERS = {
-  123 => {:name => "Joe", :email => "joe@example.com"},
-  124 => {:name => "Jim", :email => "jim@example.com"},
-  125 => {:name => "Sam", :email => "sam@example.com"},
+  123 => {'name' => "Joe", 'email' => "joe@example.com"},
+  124 => {'name' => "Jim", 'email' => "jim@example.com"},
+  125 => {'name' => "Sam", 'email' => "sam@example.com"},
 }
 
 get '/api/users/:id' do
@@ -93,12 +93,12 @@ get '/api/users/:id' do
   content_type 'application/object+json'
   user = USERS[id] or halt 404
 '{
-  "uri": "/api/user/' +id.to_s+ '",
+  "uri": "/api/users/' +id.to_s+ '",
   "mediaType": "user",
   "data": {
     "id": "' +id.to_s+ '",
-    "name": "' +user[:name]+ '",
-    "email": "' +user[:email]+ '"
+    "name": "' +user['name']+ '",
+    "email": "' +user['email']+ '"
   },
   "links": [
     {"rel": "friends", "href": "/api/users/' +id.to_s+ '/friends"},
@@ -130,7 +130,7 @@ delete '/api/users/:id' do
 end
 
 
-get '/api/user/:id/avatar' do
+get '/api/users/:id/avatar' do
   content_type 'application/json'
 '{
   "href": "foo.png",
