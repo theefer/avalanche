@@ -56,8 +56,8 @@ get '/api/users' do
   content_type 'application/objectclass+json'
 '{
   "links": [
-    {"rel": "user",        "href": "/api/users/{id}"},
-    {"rel": "user-avatar", "href": "/api/users/{id}/avatar"}
+    {"rel": "item",   "href": "/api/users/{id}"},
+    {"rel": "avatar", "href": "/api/users/{id}/avatar"}
   ]
 }'
 end

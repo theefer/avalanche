@@ -471,8 +471,15 @@ define('Model', ['knockout', 'knockout.mapping'], function(ko, koMapping) {
     // this.dirty = ko.observable(false)
     // TODO: on data(newValue), mark as dirty?
 
-console.log("RESOURCE", resource)
-    resource.read().then(function(data) {
+    this.read()
+// FIXME: actually don't read here, do it explicitly in Store
+  };
+
+
+
+  Model.prototype.read = function() {
+    // FIXME: by default, read from server, though can disable (esp. from ctor)
+    return this.resource.read().then(function(data) {
       // var observable = koMapping.fromJS(data, that.data);
       var observable = koMapping.fromJS(data);
       this.data(observable)
@@ -480,19 +487,22 @@ console.log("RESOURCE", resource)
 console.log("set data in Model", this, observable, this.data())
     }.bind(this));
   };
-
-
-
-  // Model.prototype.read = function() {
-  // };
-  // Model.prototype.write = function() {
-  // };
+  Model.prototype.write = function() {
+    var data = koMapping.toJS(this.data)
+    console.log("update with", data)
+    // FIXME: state=saving?
+    // return this.resource.update(data).then(function() {
+    //   // FIXME: change state or something?
+    //   // this.data(null)
+    // }.bind(this));
+    return this.resource.update(data);
+  };
 
   Model.prototype.destroy = function() {
     return this.resource.destroy().then(function() {
       this.state('destroyed')
       this.data(null)
-    });
+    }.bind(this));
   };
 
   return Model;
@@ -512,10 +522,18 @@ console.log("store create data", resource)
     });
   };
 
-  Store.prototype.getById = function(data) {
-    // this.resource.follow('???')
-    // wrap in resource
-    // wrap in model
+  Store.prototype.getById = function(id) {
+    // FIXME: always {id}?
+    return this.resource.follow('item', {id: id}).then(function(itemResource) {
+      return itemResource.fetch().then(function(resource) {
+        console.log("store getById", resource, id)
+        return new Model(resource)
+      });
+      // wrap in resource
+      // wrap in model
+      
+    });
+    // FIXME: errback: not supported?
   };
 
   return Store;
@@ -611,7 +629,7 @@ root.follow('images').then(function(res) {
 console.log("follow users [ObjectClass]")
 root.follow('users').then(function(res) {
   console.log("users:", res)
-  res.follow('user', {id: 123}).then(function(ures) {
+  res.follow('item', {id: 123}).then(function(ures) {
     ures.get().then(function(x) {
       console.log("user data: ", x)
     });
@@ -637,32 +655,33 @@ userStore.create({name: 'Adam', email: 'adam@example.com'}).then(function(userMo
   console.log(userModel.data())
 
   // update
-  // userModel.data().name('Ada')
-  // userModel.write()
+  userModel.data().name('Ada')
+  userModel.write().then(function() {
+    console.log("model updated!", arguments)
+  })
   // FIXME: track progress? errors?
 
   // userModel.saving(), .loading(), .dirty()
   // or .state() [uninitialized, ready, saving, loading, destroyed] ?
 
-
   // delete
-  // userModel.destroy()
+  userModel.destroy().then(function() {
+    console.log("now destroyed!", userModel.data())
+  })
   // FIXME: track progress? errors?
 }, function() {
   console.log("store create error", arguments)
 });
 
-return;
-
 // read
-userStore.getById(345).then(function(userModel) {
+userStore.getById(123).then(function(userModel) {
   console.log(userModel)
-  console.log(userModel.data())
+  console.log(userModel.data().email())
 });
-// OR:
-// var userModel = userStore.getById(345)
-// console.log(userModel)
-// console.log(userModel.data())
+
+
+// TODO: CollectionResource: read, range, obsArray, etc
+// TODO: show stuff in view, and use model flags, state
 
 });
 
