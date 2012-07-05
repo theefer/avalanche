@@ -4,6 +4,8 @@ define('HttpJqueryAdapter', ['jquery', 'promise'], function($, Promise) {
 
   return function() {
 
+    // FIXME: single query if multiple identical requests
+
     function ajax(method, uri, data) {
       var promise = new Promise();
       var jsonData = JSON.stringify(data);
@@ -421,6 +423,51 @@ define('CollectionResource', ['Resource'], function(Resource) {
 });
 
 
+
+define('Store', function() {
+  var Store = function(objectClassResource) {
+    this.resource = objectClassResource;
+  };
+
+  Store.prototype.create = function(data) {
+    // this.resource.create(data)
+    // wrap in resource
+    // wrap in model
+console.log("try", this)
+return this.resource.create(data)
+//     return this.resource.create(data).then(function(data) {
+// console.log("data", data)
+//       return data
+//     });
+  };
+
+  Store.prototype.getById = function(data) {
+    // this.resource.follow('???')
+    // wrap in resource
+    // wrap in model
+  };
+
+  return Store;
+});
+
+define('Model', ['knockout'], function(ko) {
+  var Model = function(resource) {
+    this.resource = resource
+
+    this.data = ko.observable({})
+    this.state = ko.observable('loading') // ready, saving, loading, destroyed
+    this.dirty = ko.observable(false)
+  };
+
+  Model.prototype.destroy = function() {
+    this.resource.destroy()
+    this.state('destroyed')
+  };
+
+  return Model;
+});
+
+
 // var Entity = function(mediaType, data) {
 //   // var data = _origData;
 
@@ -432,9 +479,9 @@ define('CollectionResource', ['Resource'], function(Resource) {
 
 
 define(['HttpJqueryAdapter', 'Http', 'Resource', 'ObjectResource',
-        'ObjectClassResource', 'CollectionResource'],
+        'ObjectClassResource', 'CollectionResource', 'Store', 'Model'],
        function(HttpJqueryAdapter, Http, Resource, ObjectResource,
-                ObjectClassResource, CollectionResource) {
+                ObjectClassResource, CollectionResource, Store, Model) {
 
 var apiUri = 'http://localhost:4567/api';
 var httpAdapter = new HttpJqueryAdapter;
@@ -523,6 +570,45 @@ root.follow('users').then(function(res) {
     });
   });
 });
+
+
+
+root.follow('users').then(function(usersResource) {
+usersResource = usersResource.as(ObjectClassResource)
+var userStore = new Store(usersResource)
+
+
+// create
+userStore.create({name: 'Adam', email: 'adam@example.com'}).then(function(userModel) {
+  console.log(userModel.data())
+
+  // update
+  // userModel.data().name('Ada')
+  // FIXME: track progress? errors?
+
+  // userModel.saving(), .loading(), .dirty()
+  // or .state() [uninitialized, ready, saving, loading, destroyed] ?
+
+
+  // delete
+  // userModel.destroy()
+  // FIXME: track progress? errors?
+});
+
+return;
+
+// read
+userStore.getById(345).then(function(userModel) {
+  console.log(userModel)
+  console.log(userModel.data())
+});
+// OR:
+// var userModel = userStore.getById(345)
+// console.log(userModel)
+// console.log(userModel.data())
+
+});
+
 
 });
 
