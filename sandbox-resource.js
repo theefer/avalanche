@@ -35,10 +35,13 @@ define('HttpJqueryAdapter', ['jquery', 'promise'], function($, Promise) {
 
     // FIXME: single query if multiple identical requests
 
-    function ajax(method, uri, data) {
+    function ajax(method, uri, data, options) {
+      options = options || {};
+
       var promise = new Promise();
       var jsonData = JSON.stringify(data);
-      $.ajax({
+
+      var ajaxOptions = {
         type: method,
         url: uri,
         data: jsonData,
@@ -47,7 +50,6 @@ define('HttpJqueryAdapter', ['jquery', 'promise'], function($, Promise) {
         // cache, processData, contentType, etc (params/options?)
         // contentType: 'application/json; charset=utf-8',
         success: function(response, textStatus, req) {
-          // console.log("success:", arguments, req.getAllResponseHeaders())
           var contentType = req.getResponseHeader('Content-Type');
           promise.resolve({body: response, contentType: contentType});
         },
@@ -56,21 +58,30 @@ define('HttpJqueryAdapter', ['jquery', 'promise'], function($, Promise) {
           var error = {}; // ???
           promise.reject(error);
         }
-      });
+      };
+
+      if (options.accepts) {
+        ajaxOptions.accepts = options.accepts
+      }
+      if (options.contentType) {
+        ajaxOptions.contentType = options.contentType
+      }
+
+      $.ajax(ajaxOptions);
       return promise;
     }
 
-    function get(uri, params) {
-      return ajax('GET', uri, params);
+    function get(uri, params, options) {
+      return ajax('GET', uri, params, options);
     }
-    function put(uri, data) {
-      return ajax('PUT', uri, data);
+    function put(uri, data, options) {
+      return ajax('PUT', uri, data, options);
     }
-    function post(uri, data) {
-      return ajax('POST', uri, data);
+    function post(uri, data, options) {
+      return ajax('POST', uri, data, options);
     }
-    function del(uri) {
-      return ajax('DELETE', uri);
+    function del(uri, options) {
+      return ajax('DELETE', uri, options);
     }
 
     return {
@@ -93,35 +104,33 @@ define('Http', ['HttpJqueryAdapter'], function(HttpJqueryAdapter) {
     /**
      * @return a new Promise(data)
      */
-    function get(params) {
+    function get(params, options) {
       // TODO: send Accept
-      return httpAdapter.get(uri, params);
+      return httpAdapter.get(uri, params, options);
     }
 
     /**
      * @return a new Promise(data)
      */
-    function put(data) {
+    function put(data, options) {
+      // TODO: send mediaType as Content-Type
+      return httpAdapter.put(uri, data, options);
+    }
+
+    /**
+     * @return a new Promise(data)
+     */
+    function post(data, options) {
       // TODO: send mediaType as Content-Type
       // TODO: send Accept
-      return httpAdapter.put(uri, data);
+      return httpAdapter.post(uri, data, options);
     }
 
     /**
      * @return a new Promise(data)
      */
-    function post(data) {
-      // TODO: send mediaType as Content-Type
-      // TODO: send Accept
-      return httpAdapter.post(uri, data);
-    }
-
-    /**
-     * @return a new Promise(data)
-     */
-    function del() {
-      // TODO: send Accept
-      return httpAdapter.del(uri);
+    function del(options) {
+      return httpAdapter.del(uri, options);
     }
 
     return {
@@ -130,139 +139,8 @@ define('Http', ['HttpJqueryAdapter'], function(HttpJqueryAdapter) {
       post: post,
       del: del
     };
-
   };
 });
-
-
-// define('Resource0', ['Http'], function(Http) {
-
-//   return function(uri, data) {
-//     var Resource = require('Resource0');
-
-//     // var loaded = false;
-
-//     // TODO: facilities to GET and return
-//     // - the HTTP response       (?)          - backend.get
-//     // - the HTTP response body               - get
-//     // - a new Resource wrapping the response - fetch
-//     //   (polymorphic based on type?)
-
-//     // - the data from the body  (?)          - read
-//     // - an entity from the body (?)          - ?
-
-
-//     var backend = new Http(uri); // FIXME: or from options
-
-//     function get(params) {
-//       // FIXME: cache
-//       return backend.get(params).then(function(resp) {
-//         return resp.body;
-//       });
-//     }
-
-//     function put(data) {
-//       // FIXME: cache
-//       return backend.put(data).then(function(resp) {
-//         return resp.body;
-//       });
-//     }
-
-//     function post(data) {
-//       // FIXME: cache
-//       return backend.post(data).then(function(resp) {
-//         return resp.body;
-//       });
-//     }
-
-//     function del() {
-//       // FIXME: cache
-//       return backend.del().then(function(resp) {
-//         return resp.body;
-//       });
-//     }
-
-//     /**
-//      * @return a new Promise(Resource)
-//      */
-//     function fetch(params) {
-//       return backend.get(params).then(function(fetched) {
-//         // FIXME: multiplex resource class based on mediaType?
-//         // var contentType = fetched.contentType;
-//         // var resourceClass;
-//         // switch (contentType) {
-//         // case 'application/collection+json':
-//         //   break;
-//         // case 'application/object+json':
-//         //   break;
-//         // default:
-//         //   resourceClass = Resource;
-//         //   break;
-//         // }
-//         // return new resourceClass(uri, fetched.body);
-//         return new Resource(uri, fetched.body);
-//       });
-//     }
-
-//     function uriTemplate(template, params) {
-//       return template.replace(/{(.*?)}/g, function(match, varName) {
-//         var val = params[varName];
-//         if (!val) {
-//           throw new Error("Missing parameter for URI template variable: " + varName)
-//         }
-//         return val;
-//       });
-//     }
-
-//     function findRel(links, rel) {
-//       // FIXME: better lookup
-//       for (var i in links) {
-//         var l = links[i];
-//         if (l.rel == rel) {
-//           return l.href;
-//         }
-//       }
-//     }
-
-//     /**
-//      * @return a new Resource if link found
-//      * @throw LinkNotFound
-//      */
-//     function follow(rel, params) {
-//       return get().then(function(body) {
-//         var links = body && body.links,
-//         rawLink = links && findRel(links, rel);
-//         if (!rawLink) {
-//           throw new Error("LinkNotFound");
-//         }
-
-//         var link = uriTemplate(rawLink, params);
-//         return new Resource(link);
-//       });
-//     }
-
-//     function as(resourceClass) {
-//       return new resourceClass(uri, data);
-//     }
-
-
-//     return {
-//       uri: uri,
-
-//       get: get,
-//       put: put,
-//       post: post,
-//       delete: del,
-
-//       fetch: fetch,
-
-//       follow: follow,
-//       as: as
-//     };
-
-//   };
-
-// });
 
 
 
@@ -298,7 +176,12 @@ if (this._data !== undefined) {
 console.log("IMMEDIATE resolve", this._data, this.uri)
     return promise
 } else {
-    return this._backend.get(params).then(function(resp) {
+    var options = {}
+    if (this.accepts) {
+      options.accepts = this.accepts
+    }
+console.log("accepts", options)
+    return this._backend.get(params, options).then(function(resp) {
 console.log("CACHE NOW", this._data, this.uri)
 this._data = resp.body
       return resp.body;
@@ -387,6 +270,7 @@ this._data = resp.body
 define('ObjectResource', ['Resource'], function(Resource) {
   var ObjectResource = function(uri, data) {
     Resource.apply(this, arguments);
+    this.accepts = 'application/object+json'
   };
 
   ObjectResource.prototype = new Resource;
@@ -420,6 +304,7 @@ define('ObjectResource', ['Resource'], function(Resource) {
 define('ObjectClassResource', ['Resource', 'ObjectResource'], function(Resource, ObjectResource) {
   var ObjectClassResource = function(uri, data) {
     Resource.apply(this, arguments);
+    this.accepts = 'application/objectclass+json'
   };
 
   ObjectClassResource.prototype = new Resource;
@@ -446,6 +331,7 @@ return resource
 define('CollectionResource', ['Resource'], function(Resource) {
   var CollectionResource = function(uri, data) {
     Resource.apply(this, arguments);
+    this.accepts = 'application/collection+json'
   };
 
   CollectionResource.prototype = new Resource;
@@ -467,41 +353,57 @@ define('Model', ['knockout', 'knockout.mapping'], function(ko, koMapping) {
     this.resource = resource
 
     this.data = ko.observable(null)
-    this.state = ko.observable('loading') // ready, saving, loading, destroyed
+    this.state = ko.observable('uninitialized'); // uninitialized, ready, saving, loading, destroyed
     // this.dirty = ko.observable(false)
     // TODO: on data(newValue), mark as dirty?
+    // TODO: keep track of latest known server value?
+    // this._serverData = ko.observable(null)
 
     this.read()
-// FIXME: actually don't read here, do it explicitly in Store
+    // FIXME: actually don't read here, do it explicitly in Store
   };
 
 
 
   Model.prototype.read = function() {
     // FIXME: by default, read from server, though can disable (esp. from ctor)
+    var previousState = this.state()
+    this.state('loading');
     return this.resource.read().then(function(data) {
       // var observable = koMapping.fromJS(data, that.data);
       var observable = koMapping.fromJS(data);
       this.data(observable)
-      this.state('ready')
+      this.state('ready');
 console.log("set data in Model", this, observable, this.data())
+    }.bind(this), function(error) {
+      this.state(previousState);
+      return error;
     }.bind(this));
   };
+
   Model.prototype.write = function() {
     var data = koMapping.toJS(this.data)
-    console.log("update with", data)
-    // FIXME: state=saving?
-    // return this.resource.update(data).then(function() {
-    //   // FIXME: change state or something?
-    //   // this.data(null)
-    // }.bind(this));
-    return this.resource.update(data);
+    var previousState = this.state()
+    this.state('saving');
+    return this.resource.update(data).then(function(data) {
+      this.state('ready');
+      // FIXME: receive updated value?
+      return data;
+    }.bind(this), function(error) {
+      this.state(previousState);
+      return error;
+    }.bind(this));
   };
 
   Model.prototype.destroy = function() {
+    var previousState = this.state()
+    this.state('saving');
     return this.resource.destroy().then(function() {
-      this.state('destroyed')
+      this.state('destroyed');
       this.data(null)
+    }.bind(this), function(error) {
+      this.state(previousState);
+      return error;
     }.bind(this));
   };
 
@@ -682,6 +584,13 @@ userStore.getById(123).then(function(userModel) {
 
 // TODO: CollectionResource: read, range, obsArray, etc
 // TODO: show stuff in view, and use model flags, state
+
+// TODO: send Accept header corresponding to expected Resource type
+//       or fetch to read it
+
+// TODO: embedded models, incl. collections
+// TODO: share the same resource instance
+// TODO: share identical requests (oneAtATime style)
 
 });
 
