@@ -6,7 +6,7 @@ set :public_folder, '.'
 
 
 get '/api' do
-  content_type 'application/object+json'
+  content_type 'application/vnd.object+json'
 '{
   "data": {
     "description": "Demo API"
@@ -53,7 +53,7 @@ get '/api/images' do
 end
 
 get '/api/users' do
-  content_type 'application/objectclass+json'
+  content_type 'application/vnd.objectclass+json'
 '{
   "links": [
     {"rel": "item",   "href": "/api/users/{id}"},
@@ -63,7 +63,7 @@ get '/api/users' do
 end
 
 post '/api/users' do
-  content_type 'application/object+json'
+  content_type 'application/vnd.object+json'
   next_id = USERS.keys.max
   data = JSON.parse(request.body.read)
   user = USERS[next_id] = data
@@ -90,7 +90,7 @@ USERS = {
 
 get '/api/users/:id' do
   id = params[:id].to_i
-  content_type 'application/object+json'
+  content_type 'application/vnd.object+json'
   user = USERS[id] or halt 404
 '{
   "uri": "/api/users/' +id.to_s+ '",
@@ -116,7 +116,7 @@ end
 
 patch '/api/users/:id' do
   id = params[:id].to_i
-  content_type 'application/object+json'
+  content_type 'application/vnd.object+json'
   user = USERS[id] or halt 404
   user.merge JSON.parse(request.body.read)
   # FIXME: wrap in object?
