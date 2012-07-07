@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript">
+  require = ({
+    paths: {
+      'jquery': 'lib/jquery',
+      'promise': 'lib/promise',
+      'knockout': 'lib/knockout-2.1.0.debug',
+      'knockout.mapping': 'lib/knockout.mapping-2.2.1.debug'
+    },
+    shim: {
+      'jquery': {
+        exports: '$'
+      },
+      'promise': {
+        exports: 'Deferred'
+      }
+    }
+  });
+  exports = {}
+  </script>
+  <script data-main="task-client" src="lib/require.js"></script>
+  <style>
+    .all-done {
+      display: block;
+      border-bottom: 1px solid #bbb;
+      width: 100px;
+      margin-bottom: 5px; padding-bottom: 5px;
+    }
+    ul.task-list {
+      list-style-type: none;
+      margin: 0 0 1em; padding: 0;
+    }
+    .task.done .title.display {
+      text-decoration: line-through;
+    }
+    .task form {
+      display: inline;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="main">
+    <label class="all-done">
+      <input type="checkbox"/> All
+    </label>
+
+    <ul class="task-list" data-bind="template: { name: 'task-row', foreach: tasks }"></ul>
+    <a href="#" data-bind="visible: !newTask(), click: addTask">Add</a>
+    <div class="new-task" data-bind="if: newTask">
+      <div data-bind="template: { name: 'task-entry', data: newTask }"></div>
+    </div>
+  </div>
+
+  <footer id="appFooter">
+    <p>Version: <span data-bind="text: version"></span></p>
+  </footer>
+
+  <script type="text/html" id="task-row">
+    <li data-bind="template: 'task-entry'"></li>
+  </script>
+
+  <script type="text/html" id="task-entry">
+    <span class="task" data-bind="css: {'done': data().done}">
+      <input type="checkbox" data-bind="checked: data().done"/>
+      <span class="title display" data-bind="visible: !editing(), text: data().title, click: startEdit"></span>
+      <form data-bind="visible: editing, submit: finishEdit">
+        <input type="title edit" class="title" data-bind="value: data().title, valueUpdate: 'afterkeydown', hasfocus: editing" placeholder="Type in a title"/>
+      </form>
+    </span>
+  </script>
+
+</body>
+</html>
