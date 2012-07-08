@@ -54,43 +54,43 @@ define([//'resource/Resource', 'resource/ObjectResource',
     });
   });
 
-  root.follow('tasks').then(function(tasksResource) {
-    tasksResource.fetch().then(function(res) {
-      console.log(res, "should be an ObjectClassResource (follow, fetch)")
-    });
-  });
+  // root.follow('tasks').then(function(tasksResource) {
+  //   tasksResource = tasksResource.as(ObjectClassResource)
+  //   console.log(tasksResource, "should be an ObjectClassResource (follow, as)")
+  // });
 
-  root.follow('tasks').then(function(tasksResource) {
-    tasksResource = tasksResource.as(ObjectClassResource)
-    console.log(tasksResource, "should be an ObjectClassResource (follow, as)")
-  });
+  // root.follow('tasks', {}, {as: CollectionResource}).then(function(tasksResource) {
+  //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
+  // });
 
-  root.follow('tasks', {as: ObjectClassResource}).then(function(tasksResource) {
-    console.log(tasksResource, "should be an ObjectClassResource (as flag)")
-  });
+  // root.follow('tasks', {}, {as: ObjectClassResource}).then(function(tasksResource) {
+  //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
+  // });
 
-  root.follow('tasks', {fetch: true}).then(function(tasksResource) {
+  root.follow('tasks', {}, {fetch: true}).then(function(tasksResource) {
     console.log(tasksResource, "should be an ObjectClassResource (fetch flag)")
   });
 
   root.follow('tasks').then(function(tasksResource) {
     tasksResource = tasksResource.as(ObjectClassResource)
-    var tasksStore = new Store(tasksResource);
+    var tasksStore = new Store(tasksResource, Task);
     console.log("Tasks store", tasksStore);
+
+    // Leak Store to be played with from the console
+    window.tasksStore = tasksStore
 
     tasksStore.getById(1).then(function(taskModel) {
       console.log("first task: ", taskModel, taskModel.data().title(), taskModel.data().done());
+      // showcase single shared model instance:
+      taskModel.data().done.subscribe(function(done) {
+        console.log("first task done is now: ", done)
+      });
     });
 
     tasksResource.follow('all').then(function(allTasksResource) {
       allTasksResource = allTasksResource.as(CollectionResource)
       var allTasksCollection = new Collection(allTasksResource, Task);
       allTasksCollection.readAll().then(function(allTasks) {
-        console.log("all tasks", allTasks())
-        console.log("all tasks", allTasks()[0].data().title())
-        console.log("all tasks", allTasks()[0].editing())
-
-
         var newTask = ko.observable(null);
 
         function addTask() {
@@ -119,16 +119,35 @@ define([//'resource/Resource', 'resource/ObjectResource',
           return false;
         }
 
-        ko.applyBindings({tasks: allTasks, newTask: newTask, addTask: addTask},
-                         document.getElementById('main'));
+        function removeDone() {
+          var tasks = allTasksCollection.data();
+          var doneTasks = tasks.filter(function(t){ return !t.data().done(); });
+          allTasksCollection.replace(doneTasks)
+        }
+
+        var hasDone = ko.computed(function() {
+          var tasks = allTasksCollection.data();
+          return tasks.some(function(t){ return t.data().done(); });
+        });
+
+        var allDoneToggle = ko.computed(function() {
+          var tasks = allTasksCollection.data();
+          return tasks.every(function(t){ return t.data().done(); });
+        });
+
+        var mainModel = {tasks: allTasks, newTask: newTask, hasDone: hasDone,
+                         allDoneToggle: allDoneToggle,
+                         addTask: addTask, removeDone: removeDone};
+
+        ko.applyBindings(mainModel, document.getElementById('main'));
       });
     });
   });
 
-// TODO: model with resource vs only data
+// TODO: model with resource vs only data (detached)
+// TODO: model class in Store/Collection vs infer from data?
 
-// TODO: share the same model instance
-// TODO: share the same resource instance
+// TODO: model / resource tracks server version?
 
 // TODO: embedded models or collections in model
 //       (embedded entities with uri, type, data?)
@@ -141,11 +160,13 @@ define([//'resource/Resource', 'resource/ObjectResource',
 //       recognize http error
 //       or fetch to read it
 
+// TODO: avoid singleton caches (what if talking to multiple APIs?)
+
 // TODO: localStorage-backed Store
 
 
 // TODO: knockout extension
 // - obs.subscribeNext(function() {}) => trigger next change only
-// - obs.syncTo(otherObs) => ?
+// - obs.syncTo(otherObs) => computed vs bound to view, who wins?
 
 });

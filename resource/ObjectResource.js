@@ -1,11 +1,13 @@
 define(['./Resource'], function(Resource) {
   var ObjectResource = function(uri, data) {
     Resource.apply(this, arguments);
-    this.accepts = {'json': 'application/vnd.object+json'}
   };
 
   ObjectResource.prototype = new Resource;
   ObjectResource.prototype.constructor = Resource;
+
+  ObjectResource.prototype.contentType = 'application/vnd.object+json'
+
 
   ObjectResource.prototype.read = function(params, options) {
     return this.get(params, options).then(function(body) {
@@ -27,7 +29,7 @@ console.log("IN READ", body)
     });
   };
 
-  Resource.registerResourceClass(ObjectResource, 'application/vnd.object+json');
+  Resource.registerResourceClass(ObjectResource);
 
   return ObjectResource;
 });

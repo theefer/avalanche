@@ -46,12 +46,16 @@ class TaskManager
   def find(id)
     @tasks.find {|t| t.id == id}
   end
-  
+
   def replace(id, task)
     index = @tasks.index {|t| t.id == id} or raise "cannot find element to replace!"
     @tasks[index] = task
   end
-  
+
+  def replaceAll(tasks)
+    @tasks = tasks
+  end
+
   def delete(id)
     @tasks.delete_if {|t| t.id == id}
   end
@@ -113,6 +117,23 @@ post '/api/tasks/all' do
   serializeTask(task).to_json
 end
 
+# replace
+put '/api/tasks/all' do
+  content_type 'application/vnd.collection+json'
+
+  data = JSON.parse(request.body.read)
+  halt 400 if !data.is_a?(Array)
+
+  tasks = data.map {|d| Task.new_from_data(d)}
+  TASKS.replaceAll tasks
+
+  {"data" => TASKS.all.map {|t| serializeTask(t)},
+   "links" => [{"rel" => "append",  "href" => "/api/tasks/all"},
+               {"rel" => "done",    "href" => "/api/tasks/done"},
+               {"rel" => "pending", "href" => "/api/tasks/pending"}]}.to_json
+  nil
+end
+
 get '/api/tasks/:id' do
   id = params[:id].to_i
   content_type 'application/vnd.object+json'
@@ -158,9 +179,7 @@ post '/api/tasks' do
   task = Task.new_from_data(data)
   TASKS.add task
 
-  {"uri" => "/api/tasks/#{next_id}",
-  # "mediaType" => "task",
-   "data" => task}.to_json
+  serializeTask(task).to_json
 end
 
 

@@ -44,7 +44,7 @@
 
   <div id="main">
     <label class="all-done">
-      <input type="checkbox"/> All
+      <input type="checkbox" data-bind="checked: allDoneToggle"/> All
     </label>
 
     <ul class="task-list" data-bind="template: { name: 'task-row', foreach: tasks }"></ul>
@@ -52,6 +52,7 @@
     <div class="new-task" data-bind="if: newTask">
       <div data-bind="template: { name: 'task-entry', data: newTask }"></div>
     </div>
+    <p><a href="#" data-bind="visible: hasDone, click: removeDone">Remove done</a></p>
   </div>
 
   <footer id="appFooter">

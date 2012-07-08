@@ -1,8 +1,8 @@
-define(['knockout', 'knockout.mapping'], function(ko, koMapping) {
+define(['knockout', 'knockout.mapping', './Model'], function(ko, koMapping, Model) {
   var Collection = function(resource, modelClass) {
     // FIXME: required (?), or else default to (?, Model)
     this.resource = resource;
-    this.modelClass = modelClass;
+    this.modelClass = modelClass || Model;
 
     this.data = ko.observableArray();
     this.state = ko.observable('uninitialized'); // uninitialized, ready, saving, loading, destroyed
@@ -27,7 +27,7 @@ define(['knockout', 'knockout.mapping'], function(ko, koMapping) {
       // FIXME: reuse previous array
       var newArray = [];
       for (var i = 0; i < data.length; i++) {
-        var model = new this.modelClass(data[i])
+        var model = this.modelClass.prototype.make(data[i])
         newArray.push(model);
       }
       this.data(newArray);
@@ -44,7 +44,7 @@ define(['knockout', 'knockout.mapping'], function(ko, koMapping) {
     // FIXME: by default, read from server, though can disable (esp. from ctor)
     var previousState = this.state();
     this.state('loading');
-    var data = ko.toJS(model.data())
+    var data = koMapping.toJS(model.data())
     return this.resource.append(data).then(function(createdResource) {
       // var observable = koMapping.fromJS(data);
       // model.data(data)
@@ -58,6 +58,21 @@ define(['knockout', 'knockout.mapping'], function(ko, koMapping) {
       this.state('ready');
       console.log("appended model to Collection", data, createdResource, model, this.data())
       return model;
+    }.bind(this), function(error) {
+      this.state(previousState);
+      return error;
+    }.bind(this));
+  };
+
+  Collection.prototype.replace = function(models) {
+    var previousState = this.state();
+    this.state('loading');
+    var data = models.map(function(m){ return koMapping.toJS(m.data()); })
+    return this.resource.replace(data).then(function(updatedResources) {
+      this.data(models)
+      // FIXME: if there is a response, use that instead
+
+      this.state('ready');
     }.bind(this), function(error) {
       this.state(previousState);
       return error;
