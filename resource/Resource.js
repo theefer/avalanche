@@ -26,6 +26,7 @@ define(['http/Http', 'promise', 'util/oneAtATime'], function(Http, Promise, oneA
     if (!uri) {
       throw new Error('Cannot make a Resource without a URI!');
     }
+console.log("Resource.MAKE", uri, contentType, data)
 
     var resource;
     if (contentType) {
@@ -80,6 +81,7 @@ console.log("RECYCLE", resource, uri, data)
         }
         return this._backend.get(params, options).then(function(resp) {
           this._data = resp.body;
+          this._contentType = resp.contentType
           console.log("CACHE NOW", this._data, this.uri)
           return resp.body;
         }.bind(this));

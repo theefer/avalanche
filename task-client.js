@@ -1,39 +1,37 @@
-define([//'resource/Resource', 'resource/ObjectResource',
-        //'resource/ObjectClassResource', 'resource/CollectionResource',
-        'resource/Resource',
+define(['resource/Resource',
         'resource/ObjectClassResource', 'resource/CollectionResource',
-        'data/Store', 'data/Model', 'data/Collection',
+        'data/Store', 'data/Object', 'data/Collection', 'data/Model',
         'knockout',
         'compat/bind'],
-       function(//HttpJqueryAdapter, Http,
-                //Resource, ObjectResource,
-                //ObjectClassResource, CollectionResource,
-                Resource,
+       function(Resource,
                 ObjectClassResource, CollectionResource,
-                Store, Model, Collection,
+                Store, Objekt, Collection, Model,
                 ko) {
 
   var apiUri = 'http://localhost:4567/api';
   var root = new Resource(apiUri);
 
   // FIXME: nicer way to define your own Models
-  var Task = function(resource) {
+  var Task = function() {
     Model.apply(this, arguments)
 
     this.editing = ko.observable(false);
     this.editing.subscribe(function(editing) {
       if (!editing) {
         console.log("finished editing, save")
-        if (this.resource) {
-          this.write()
+        if (this.object) {
+          this.object.write()
         }
-        // FIXME: hack, should not be necessary!
+        // FIXME: object hack, should not be necessary?
       }
     }.bind(this));
 
     this.data().done.subscribe(function(isDone) {
       console.log("sync toggle done: ", isDone)
-      this.write();
+      if (this.object) {
+        this.object.write();
+        // FIXME: object hack, should not be necessary?
+      }
     }.bind(this));
   }
   Task.prototype = Model.prototype
@@ -80,9 +78,9 @@ define([//'resource/Resource', 'resource/ObjectResource',
     window.tasksStore = tasksStore
 
     tasksStore.getById(1).then(function(taskModel) {
-      console.log("first task: ", taskModel, taskModel.data().title(), taskModel.data().done());
+      console.log("first task: ", taskModel, taskModel.data().data().title(), taskModel.data().data().done());
       // showcase single shared model instance:
-      taskModel.data().done.subscribe(function(done) {
+      taskModel.data().data().done.subscribe(function(done) {
         console.log("first task done is now: ", done)
       });
     });
@@ -94,11 +92,9 @@ define([//'resource/Resource', 'resource/ObjectResource',
         var newTask = ko.observable(null);
 
         function addTask() {
-          // var newTaskModel = new Task
-          // // FIXME: construct Model without Resource backing?
-          // newTaskModel.data({done: ko.observable(false), title: ko.observable('')})
+          var newTaskModel = new Task({done: ko.observable(false), title: ko.observable('')})
+          // FIXME: observables here, or inside? also see how ct'ed in Object
 
-          var newTaskModel = new Task(null, {done: ko.observable(false), title: ko.observable('')})
           // FIXME: arg, defaults not here?
           newTaskModel.editing(true);
           newTask(newTaskModel);
@@ -121,18 +117,18 @@ define([//'resource/Resource', 'resource/ObjectResource',
 
         function removeDone() {
           var tasks = allTasksCollection.data();
-          var doneTasks = tasks.filter(function(t){ return !t.data().done(); });
+          var doneTasks = tasks.filter(function(t){ return !t.data().data().done(); });
           allTasksCollection.replace(doneTasks)
         }
 
         var hasDone = ko.computed(function() {
           var tasks = allTasksCollection.data();
-          return tasks.some(function(t){ return t.data().done(); });
+          return tasks.some(function(t){ return t.data().data().done(); });
         });
 
         var allDoneToggle = ko.computed(function() {
           var tasks = allTasksCollection.data();
-          return tasks.every(function(t){ return t.data().done(); });
+          return tasks.every(function(t){ return t.data().data().done(); });
         });
 
         var mainModel = {tasks: allTasks, newTask: newTask, hasDone: hasDone,
@@ -144,15 +140,27 @@ define([//'resource/Resource', 'resource/ObjectResource',
     });
   });
 
-// TODO: model with resource vs only data (detached)
-// TODO: model class in Store/Collection vs infer from data?
+// TODO: koMapping inside Model, not Object
 
-// TODO: model / resource tracks server version?
+// TODO: model class in Store/Collection vs infer from data?
+// TODO: mediaType for entities? mapped to model classes?
+
+// TODO: TaskObject + TaskModel? different concerns?
+// TODO: Object() or Model() to expose data directly?
 
 // TODO: embedded models or collections in model
 //       (embedded entities with uri, type, data?)
+//       - task has a list of tags
+//       - task has one author
+//       - root has core resources embedded in
+//       lazy load properties/sub-models via links (e.g. author "avatar")
 
-// TODO: mediaType for entities? mapped to model classes?
+// TODO: Tests !
+
+
+
+
+// TODO: model / resource tracks server version?
 
 // TODO: CollectionResource: range, other ops
 

@@ -1,6 +1,6 @@
-define(['knockout', 'knockout.mapping', './Model'], function(ko, koMapping, Model) {
+define(['knockout', 'knockout.mapping', './Object', './Model'], function(ko, koMapping, Objekt, Model) {
   var Collection = function(resource, modelClass) {
-    // FIXME: required (?), or else default to (?, Model)
+    // FIXME: required (?), or else default to (?, Objekt)
     this.resource = resource;
     this.modelClass = modelClass || Model;
 
@@ -27,8 +27,9 @@ define(['knockout', 'knockout.mapping', './Model'], function(ko, koMapping, Mode
       // FIXME: reuse previous array
       var newArray = [];
       for (var i = 0; i < data.length; i++) {
-        var model = this.modelClass.prototype.make(data[i])
-        newArray.push(model);
+        // var model = this.modelClass.prototype.make(data[i])
+        var object = Objekt.prototype.make(data[i], this.modelClass)
+        newArray.push(object);
       }
       this.data(newArray);
       this.state('ready');
@@ -41,35 +42,34 @@ define(['knockout', 'knockout.mapping', './Model'], function(ko, koMapping, Mode
   };
 
   Collection.prototype.append = function(model) {
-    // FIXME: by default, read from server, though can disable (esp. from ctor)
     var previousState = this.state();
     this.state('loading');
     var data = koMapping.toJS(model.data())
     return this.resource.append(data).then(function(createdResource) {
-      // var observable = koMapping.fromJS(data);
-      // model.data(data)
+      // FIXME: can also append an Object and then reuse it?
+      var createdObject = Objekt.prototype.make(createdResource, this.modelClass)
 
-      // FIXME: hack, should we avoid mutating and create a new one instead?
-      model.resource = createdResource
-      model.read()
+      console.log(model, createdResource, createdObject, createdObject.data() == model)
+      // FIXME: should reuse the model?
 
-      this.data.push(model)
+      this.data.push(createdObject);
 
       this.state('ready');
-      console.log("appended model to Collection", data, createdResource, model, this.data())
-      return model;
+      console.log("appended model to Collection", data, createdResource, createdObject, model, this.data())
+      return createdObject;
     }.bind(this), function(error) {
       this.state(previousState);
       return error;
     }.bind(this));
   };
 
-  Collection.prototype.replace = function(models) {
+  // FIXME: accept objects or models?
+  Collection.prototype.replace = function(objects) {
     var previousState = this.state();
     this.state('loading');
-    var data = models.map(function(m){ return koMapping.toJS(m.data()); })
+    var data = objects.map(function(m){ return koMapping.toJS(m.data().data()); })
     return this.resource.replace(data).then(function(updatedResources) {
-      this.data(models)
+      this.data(objects)
       // FIXME: if there is a response, use that instead
 
       this.state('ready');

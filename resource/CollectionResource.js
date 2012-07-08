@@ -10,7 +10,9 @@ define(['./Resource', './ObjectResource'], function(Resource, ObjectResource) {
 
 
   CollectionResource.prototype.readAll = function(params, options) {
+console.log("in")
     return this.get(params, options).then(function(body) {
+console.log("in")
       var data = body && body.data;
       if (data) {
         var resources = [];
