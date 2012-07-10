@@ -1,4 +1,4 @@
-define(['http/Http', 'promise', 'util/oneAtATime'], function(Http, Promise, oneAtATime) {
+define(['../http/Http', 'promise', '../util/oneAtATime'], function(Http, Promise, oneAtATime) {
 
   var Resource = function(uri, data) {
     this.uri = uri;

@@ -4,10 +4,12 @@
   <script type="text/javascript">
   require = ({
     paths: {
-      'jquery': 'lib/jquery',
-      'promise': 'lib/promise',
-      'knockout': 'lib/knockout-2.1.0.debug',
-      'knockout.mapping': 'lib/knockout.mapping-2.2.1.debug'
+      'avalanche': '../../js/avalanche',
+
+      'jquery':           '../../lib/jquery',
+      'promise':          '../../lib/promise',
+      'knockout':         '../../lib/knockout-2.1.0.debug',
+      'knockout.mapping': '../../lib/knockout.mapping-2.2.1.debug'
     },
     shim: {
       'jquery': {
@@ -20,7 +22,7 @@
   });
   exports = {}
   </script>
-  <script data-main="task-client" src="lib/require.js"></script>
+  <script data-main="client" src="../../lib/require.js"></script>
   <style>
     .all-done {
       display: block;
