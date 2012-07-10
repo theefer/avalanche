@@ -139,20 +139,21 @@ define(['avalanche/resource/Resource',
     });
   });
 
+// TODO: embedded models or collections in model
+//       (embedded entities with uri, type, data?)
+//       - task has a list of tags
+//         (embedded external coll, vs array of objects)
+//       - task has one author
+//       - root has core resources embedded in
+//       lazy load properties/sub-models via links (e.g. author "avatar")
+
 // TODO: model class in Store/Collection vs infer from data?
 // TODO: mediaType for entities? mapped to model classes?
 
 // TODO: on destroy, kill resources and models from cache
 
 // TODO: TaskObject + TaskModel? different concerns?
-// TODO: Object() or Model() to expose data directly?
-
-// TODO: embedded models or collections in model
-//       (embedded entities with uri, type, data?)
-//       - task has a list of tags
-//       - task has one author
-//       - root has core resources embedded in
-//       lazy load properties/sub-models via links (e.g. author "avatar")
+// TODO: Object() or Model() to expose data directly? merge?
 
 // TODO: Tests !
 

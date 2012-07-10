@@ -69,6 +69,10 @@
     <span class="task" data-bind="css: {'done': data().done}">
       <input type="checkbox" data-bind="checked: data().done"/>
       <span class="title display" data-bind="visible: !editing(), text: data().title, click: startEdit"></span>
+      <span class="tags" data-bind="foreach: data().tags">
+        #<span data-bind="text: data.name"></span> 
+      </span>
+      &mdash; <em><span data-bind="text: data().author.data.nickname"></span></em>
       <form data-bind="visible: editing, submit: finishEdit">
         <input type="title edit" class="title" data-bind="value: data().title, valueUpdate: 'afterkeydown', hasfocus: editing" placeholder="Type in a title"/>
       </form>

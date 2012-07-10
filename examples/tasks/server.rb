@@ -4,25 +4,74 @@ require 'json'
 
 set :public_folder, '.'
 
+module JSONable
+  def to_json
+    to_hash.to_json
+  end
+end
+
+class Tag
+  include JSONable
+
+  attr_reader :type
+
+  def id; @name; end
+
+  def initialize(name)
+    @name = name
+    @type = 'tag'
+  end
+
+  def to_hash
+    {"name" => @name}
+  end
+end
+
+class User
+  include JSONable
+
+  attr_reader :id, :type
+
+  def initialize(id, nickname)
+    @id = id
+    @nickname = nickname
+    @type = 'user'
+  end
+
+  def to_hash
+    {
+      "nickname" => @nickname
+    }
+  end
+end
+
 class Task
-  attr_reader :id
+  include JSONable
+
+  attr_reader :id, :type
 
   def initialize(id, title, done)
     @id = id
-    @title = title
+    @title, @tags = extract_title_and_tags(title)
     @done = done
+    @author = User.new(777, 'abraham')
+    @type = 'task'
+  end
+
+  def extract_title_and_tags(s)
+    title = s.gsub(/\s?\#[a-z]+\s?/, ' ').strip
+    tags = s.scan(/\#([a-z]+)/).map {|w| Tag.new(w)}
+    [title, tags]
   end
 
   def to_hash
     {
       "id"    => @id,
       "title" => @title,
-      "done"  => @done
+      "done"  => @done,
+      "author" => serializeObject(@author),
+      "tags"  => @tags.map {|t| serializeObject(t)}
     }
-  end
-
-  def to_json
-    to_hash.to_json
   end
 
   def self.new_from_data(data)
@@ -66,12 +115,12 @@ class TaskManager
 end
 
 TASKS = TaskManager.new
-TASKS.add Task.new(1, "Default Task", false)
+TASKS.add Task.new(1, "Default Task #demo", false)
 
-def serializeTask(task)
-  {"uri" => "/api/tasks/#{task.id}",
-   # "mediaType" => "task",
-   "data" => task.to_hash}
+def serializeObject(obj)
+  {"uri" => "/api/#{obj.type}s/#{obj.id}",
+   # "mediaType" => obj.type,
+   "data" => obj.to_hash}
 end
 
 get '/api' do
@@ -95,7 +144,7 @@ end
 
 get '/api/tasks/all' do
   content_type 'application/vnd.collection+json'
-  {"data" => TASKS.all.map {|t| serializeTask(t)},
+  {"data" => TASKS.all.map {|t| serializeObject(t)},
    "links" => [{"rel" => "append",  "href" => "/api/tasks/all"},
                {"rel" => "done",    "href" => "/api/tasks/done"},
                {"rel" => "pending", "href" => "/api/tasks/pending"}]}.to_json
@@ -114,7 +163,7 @@ post '/api/tasks/all' do
   task = Task.new_from_data(data)
   TASKS.add task
 
-  serializeTask(task).to_json
+  serializeObject(task).to_json
 end
 
 # replace
@@ -127,7 +176,7 @@ put '/api/tasks/all' do
   tasks = data.map {|d| Task.new_from_data(d)}
   TASKS.replaceAll tasks
 
-  {"data" => TASKS.all.map {|t| serializeTask(t)},
+  {"data" => TASKS.all.map {|t| serializeObject(t)},
    "links" => [{"rel" => "append",  "href" => "/api/tasks/all"},
                {"rel" => "done",    "href" => "/api/tasks/done"},
                {"rel" => "pending", "href" => "/api/tasks/pending"}]}.to_json
@@ -138,7 +187,7 @@ get '/api/tasks/:id' do
   id = params[:id].to_i
   content_type 'application/vnd.object+json'
   task = TASKS.find(id) or halt 404
-  serializeTask(task).to_json
+  serializeObject(task).to_json
 end
 
 put '/api/tasks/:id' do
@@ -179,7 +228,7 @@ post '/api/tasks' do
   task = Task.new_from_data(data)
   TASKS.add task
 
-  serializeTask(task).to_json
+  serializeObject(task).to_json
 end
 
 
@@ -207,11 +256,11 @@ end
 #   collection[task]
 
 
-# /api/categories
-#   objectclass[category]
+# /api/tags
+#   objectclass[tag]
 
-# /api/categories/{id}
-#   object[category]
+# /api/tags/{name}
+#   object[tag]
 
-# /api/categories/all
-#   collection[category]
+# /api/tags/all
+#   collection[tag]
