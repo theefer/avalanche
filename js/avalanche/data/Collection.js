@@ -1,4 +1,4 @@
-define(['knockout', 'knockout.mapping', './Object', './Model'], function(ko, koMapping, Objekt, Model) {
+define(['knockout', './Object', './Model'], function(ko, Objekt, Model) {
   var Collection = function(resource, modelClass) {
     // FIXME: required (?), or else default to (?, Objekt)
     this.resource = resource;
@@ -23,7 +23,6 @@ define(['knockout', 'knockout.mapping', './Object', './Model'], function(ko, koM
     var previousState = this.state();
     this.state('loading');
     return this.resource.readAll(undefined, options).then(function(data) {
-      // var observable = koMapping.fromJS(data, this.data());
       // FIXME: reuse previous array
       var newArray = [];
       for (var i = 0; i < data.length; i++) {
@@ -44,7 +43,7 @@ define(['knockout', 'knockout.mapping', './Object', './Model'], function(ko, koM
   Collection.prototype.append = function(model) {
     var previousState = this.state();
     this.state('loading');
-    var data = koMapping.toJS(model.data())
+    var data = model.toJS();
     return this.resource.append(data).then(function(createdResource) {
       // FIXME: can also append an Object and then reuse it?
       var createdObject = Objekt.prototype.make(createdResource, this.modelClass)
@@ -67,9 +66,11 @@ define(['knockout', 'knockout.mapping', './Object', './Model'], function(ko, koM
   Collection.prototype.replace = function(objects) {
     var previousState = this.state();
     this.state('loading');
-    var data = objects.map(function(m){ return koMapping.toJS(m.data().data()); })
+    var data = objects.map(function(m){ return m.data().toJS(); })
     return this.resource.replace(data).then(function(updatedResources) {
       this.data(objects)
+      // FIXME: destroy/free unreferenced objects
+
       // FIXME: if there is a response, use that instead
 
       this.state('ready');

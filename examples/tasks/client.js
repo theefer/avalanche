@@ -92,8 +92,7 @@ define(['avalanche/resource/Resource',
         var newTask = ko.observable(null);
 
         function addTask() {
-          var newTaskModel = new Task({done: ko.observable(false), title: ko.observable('')})
-          // FIXME: observables here, or inside? also see how ct'ed in Object
+          var newTaskModel = new Task({done: false, title: ''});
 
           // FIXME: arg, defaults not here?
           newTaskModel.editing(true);
@@ -140,10 +139,10 @@ define(['avalanche/resource/Resource',
     });
   });
 
-// TODO: koMapping inside Model, not Object
-
 // TODO: model class in Store/Collection vs infer from data?
 // TODO: mediaType for entities? mapped to model classes?
+
+// TODO: on destroy, kill resources and models from cache
 
 // TODO: TaskObject + TaskModel? different concerns?
 // TODO: Object() or Model() to expose data directly?

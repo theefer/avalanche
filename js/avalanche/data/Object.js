@@ -1,4 +1,4 @@
-define(['knockout', 'knockout.mapping', './Model'], function(ko, koMapping, Model) {
+define(['knockout', './Model'], function(ko, Model) {
   var Objekt = function(resource, modelClass) {
     this.resource = resource;
     this.modelClass = modelClass || Model
@@ -48,24 +48,14 @@ define(['knockout', 'knockout.mapping', './Model'], function(ko, koMapping, Mode
     return this.resource.read(undefined, options).then(function(data) {
       var model = this.data()
       if (model) {
-        // model exists, simply update it
-        // koMapping.fromJS(data, {}, model.data())
-        var modelData = model.data()
-        koMapping.fromJS(data, {}, modelData)
-        // FIXME: move koMapping (from/to) inside model, can be overriden, config'd
-        model.data(modelData)
-        // FIXME: redundant?
+        model.merge(data)
       } else {
         // create model with data
-        model = new this.modelClass(data)
-        model.object = this
+        model = new this.modelClass(data, this)
         // FIXME: do we want bi-directional bindings?
         this.data(model);
       }
-      // FIXME:  ^ clumsy
 
-      // var observable = koMapping.fromJS(data, this.data())
-      // this.data(observable)
       this.state('ready');
       console.log("set data in Objekt", this, data, this.data())
       return this.data;
@@ -76,8 +66,7 @@ define(['knockout', 'knockout.mapping', './Model'], function(ko, koMapping, Mode
   };
 
   Objekt.prototype.write = function() {
-    // FIXME: erg
-    var data = koMapping.toJS(this.data().data())
+    var data = this.data().toJS();
     var previousState = this.state();
     this.state('saving');
     return this.resource.update(data).then(function(data) {
