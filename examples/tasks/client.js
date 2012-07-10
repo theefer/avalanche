@@ -77,10 +77,10 @@ define(['avalanche/resource/Resource',
     // Leak Store to be played with from the console
     window.tasksStore = tasksStore
 
-    tasksStore.getById(1).then(function(taskModel) {
-      console.log("first task: ", taskModel, taskModel.data().data().title(), taskModel.data().data().done());
+    tasksStore.getById(1).then(function(taskObject) {
+      console.log("first task: ", taskObject, taskObject.model().data().title(), taskObject.model().data().done());
       // showcase single shared model instance:
-      taskModel.data().data().done.subscribe(function(done) {
+      taskObject.model().data().done.subscribe(function(done) {
         console.log("first task done is now: ", done)
       });
     });
@@ -116,18 +116,18 @@ define(['avalanche/resource/Resource',
 
         function removeDone() {
           var tasks = allTasksCollection.data();
-          var doneTasks = tasks.filter(function(t){ return !t.data().data().done(); });
+          var doneTasks = tasks.filter(function(t){ return !t.v().done(); });
           allTasksCollection.replace(doneTasks)
         }
 
         var hasDone = ko.computed(function() {
           var tasks = allTasksCollection.data();
-          return tasks.some(function(t){ return t.data().data().done(); });
+          return tasks.some(function(t){ return t.v().done(); });
         });
 
         var allDoneToggle = ko.computed(function() {
           var tasks = allTasksCollection.data();
-          return tasks.every(function(t){ return t.data().data().done(); });
+          return tasks.every(function(t){ return t.v().done(); });
         });
 
         var mainModel = {tasks: allTasks, newTask: newTask, hasDone: hasDone,
@@ -157,6 +157,7 @@ define(['avalanche/resource/Resource',
 // TODO: Tests !
 
 
+// TODO: Model as interface, ko.mapping-based one as subclass
 
 
 // TODO: model / resource tracks server version?

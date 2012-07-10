@@ -3,8 +3,16 @@ define(['knockout', './Model'], function(ko, Model) {
     this.resource = resource;
     this.modelClass = modelClass || Model
 
-    this.data = ko.observable(); // not yet initialized
+    this.model = ko.observable(); // not yet initialized
     this.state = ko.observable('uninitialized'); // uninitialized, ready, saving, loading, destroyed
+
+    this.v = ko.computed(function() {
+      var model = this.model();
+      if (model) {
+        return model.data();
+      }
+    }.bind(this))
+
     // this.dirty = ko.observable(false)
     // TODO: on data(newValue), mark as dirty?
     // TODO: keep track of latest known server value?
@@ -46,19 +54,19 @@ define(['knockout', './Model'], function(ko, Model) {
     var previousState = this.state();
     this.state('loading');
     return this.resource.read(undefined, options).then(function(data) {
-      var model = this.data()
+      var model = this.model()
       if (model) {
         model.merge(data)
       } else {
         // create model with data
         model = new this.modelClass(data, this)
         // FIXME: do we want bi-directional bindings?
-        this.data(model);
+        this.model(model);
       }
 
       this.state('ready');
-      console.log("set data in Objekt", this, data, this.data())
-      return this.data;
+      console.log("set data in Objekt", this, data, this.model())
+      return this.model;
     }.bind(this), function(error) {
       this.state(previousState);
       return error;
@@ -66,7 +74,7 @@ define(['knockout', './Model'], function(ko, Model) {
   };
 
   Objekt.prototype.write = function() {
-    var data = this.data().toJS();
+    var data = this.model().toJS();
     var previousState = this.state();
     this.state('saving');
     return this.resource.update(data).then(function(data) {
@@ -84,7 +92,8 @@ define(['knockout', './Model'], function(ko, Model) {
     this.state('saving');
     return this.resource.destroy().then(function() {
       this.state('destroyed');
-      this.data(undefined);
+      this.model(undefined);
+      // FIXME: free up model
     }.bind(this), function(error) {
       this.state(previousState);
       return error;

@@ -26,7 +26,6 @@ define(['knockout', './Object', './Model'], function(ko, Objekt, Model) {
       // FIXME: reuse previous array
       var newArray = [];
       for (var i = 0; i < data.length; i++) {
-        // var model = this.modelClass.prototype.make(data[i])
         var object = Objekt.prototype.make(data[i], this.modelClass)
         newArray.push(object);
       }
@@ -41,14 +40,14 @@ define(['knockout', './Object', './Model'], function(ko, Objekt, Model) {
   };
 
   Collection.prototype.append = function(model) {
+    var data = model.toJS();
     var previousState = this.state();
     this.state('loading');
-    var data = model.toJS();
     return this.resource.append(data).then(function(createdResource) {
       // FIXME: can also append an Object and then reuse it?
       var createdObject = Objekt.prototype.make(createdResource, this.modelClass)
 
-      console.log(model, createdResource, createdObject, createdObject.data() == model)
+      console.log(model, createdResource, createdObject, createdObject.model() == model)
       // FIXME: should reuse the model?
 
       this.data.push(createdObject);
@@ -66,7 +65,7 @@ define(['knockout', './Object', './Model'], function(ko, Objekt, Model) {
   Collection.prototype.replace = function(objects) {
     var previousState = this.state();
     this.state('loading');
-    var data = objects.map(function(m){ return m.data().toJS(); })
+    var data = objects.map(function(m){ return m.model().toJS(); });
     return this.resource.replace(data).then(function(updatedResources) {
       this.data(objects)
       // FIXME: destroy/free unreferenced objects
