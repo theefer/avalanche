@@ -50,18 +50,13 @@ class Task
 
   attr_reader :id, :type
 
-  def initialize(id, title, done)
+  def initialize(id, title, tags, done)
     @id = id
-    @title, @tags = extract_title_and_tags(title)
+    @title = title
+    @tags = tags
     @done = done
     @author = User.new(777, 'abraham')
     @type = 'task'
-  end
-
-  def extract_title_and_tags(s)
-    title = s.gsub(/\s?\#[a-z]+\s?/, ' ').strip
-    tags = s.scan(/\#([a-z]+)/).map {|w| Tag.new(w)}
-    [title, tags]
   end
 
   def to_hash
@@ -74,8 +69,15 @@ class Task
     }
   end
 
+  def self.extract_title_and_tags(s)
+    title = s.gsub(/\s?\#[a-z]+\s?/, ' ').strip
+    tags = s.scan(/\#([a-z]+)/).map {|w| Tag.new(w)}
+    [title, tags]
+  end
+
   def self.new_from_data(data)
-    new(data["id"], data["title"], data["done"])
+    title, tags = extract_title_and_tags(data["title"])
+    new(data["id"], title, tags, data["done"])
   end
 end
 
@@ -115,7 +117,7 @@ class TaskManager
 end
 
 TASKS = TaskManager.new
-TASKS.add Task.new(1, "Default Task #demo", false)
+TASKS.add Task.new(1, "Default Task", [Tag.new('demo')], false)
 
 def serializeObject(obj)
   {"uri" => "/api/#{obj.type}s/#{obj.id}",
