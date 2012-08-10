@@ -72,18 +72,6 @@ define(['avalanche/resource/Resource',
   root.follow('tasks').then(function(tasksResource) {
     tasksResource = tasksResource.as(ObjectClassResource)
     var tasksStore = new Store(tasksResource, Task);
-    console.log("Tasks store", tasksStore);
-
-    // Leak Store to be played with from the console
-    window.tasksStore = tasksStore
-
-    tasksStore.getById(1).then(function(taskObject) {
-      console.log("first task: ", taskObject, taskObject.model().data().title(), taskObject.model().data().done());
-      // showcase single shared model instance:
-      taskObject.model().data().done.subscribe(function(done) {
-        console.log("first task done is now: ", done)
-      });
-    });
 
     tasksResource.follow('all').then(function(allTasksResource) {
       allTasksResource = allTasksResource.as(CollectionResource)
@@ -96,7 +84,6 @@ define(['avalanche/resource/Resource',
 
           // FIXME: arg, defaults not here?
           newTaskModel.editing(true);
-          newTask(newTaskModel);
 
           var handle = newTaskModel.editing.subscribe(function(editing) {
             if (!editing) {
@@ -111,6 +98,9 @@ define(['avalanche/resource/Resource',
               });
             }
           });
+
+          newTask(newTaskModel);
+
           return false;
         }
 
@@ -137,6 +127,18 @@ define(['avalanche/resource/Resource',
         ko.applyBindings(mainModel, document.getElementById('main'));
       });
     });
+
+
+    // Leak Store to be played with from the console
+    window.tasksStore = tasksStore
+
+    // showcase single shared model instance:
+    tasksStore.getById(1).then(function(taskObject) {
+      console.log("first task: ", taskObject, taskObject.model().data().title(), taskObject.model().data().done());
+      taskObject.model().data().done.subscribe(function(done) {
+        console.log("first task done is now: ", done)
+      });
+    });
   });
 
 // TODO: embedded models or collections in model
@@ -144,7 +146,7 @@ define(['avalanche/resource/Resource',
 //       - task has a list of tags
 //         (embedded external coll, vs array of objects)
 //       - task has one author
-//       - root has core resources embedded in
+//       - root has core resources embedded in (e.g. version, or tasks)
 //       lazy load properties/sub-models via links (e.g. author "avatar")
 
 // TODO: model class in Store/Collection vs infer from data?
@@ -158,7 +160,7 @@ define(['avalanche/resource/Resource',
 // TODO: Tests !
 
 
-// TODO: Model as interface, ko.mapping-based one as subclass
+// TODO: Model as interface, ko.mapping-based one as subclass. or magic in Object, dumb Models?
 
 
 // TODO: model / resource tracks server version?
