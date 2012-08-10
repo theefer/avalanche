@@ -52,23 +52,6 @@ define(['avalanche/resource/Resource',
     });
   });
 
-  // root.follow('tasks').then(function(tasksResource) {
-  //   tasksResource = tasksResource.as(ObjectClassResource)
-  //   console.log(tasksResource, "should be an ObjectClassResource (follow, as)")
-  // });
-
-  // root.follow('tasks', {}, {as: CollectionResource}).then(function(tasksResource) {
-  //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
-  // });
-
-  // root.follow('tasks', {}, {as: ObjectClassResource}).then(function(tasksResource) {
-  //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
-  // });
-
-  root.follow('tasks', {}, {fetch: true}).then(function(tasksResource) {
-    console.log(tasksResource, "should be an ObjectClassResource (fetch flag)")
-  });
-
   root.follow('tasks').then(function(tasksResource) {
     tasksResource = tasksResource.as(ObjectClassResource)
     var tasksStore = new Store(tasksResource, Task);
@@ -139,6 +122,23 @@ define(['avalanche/resource/Resource',
         console.log("first task done is now: ", done)
       });
     });
+  });
+
+  // root.follow('tasks').then(function(tasksResource) {
+  //   tasksResource = tasksResource.as(ObjectClassResource)
+  //   console.log(tasksResource, "should be an ObjectClassResource (follow, as)")
+  // });
+
+  // root.follow('tasks', {}, {as: CollectionResource}).then(function(tasksResource) {
+  //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
+  // });
+
+  // root.follow('tasks', {}, {as: ObjectClassResource}).then(function(tasksResource) {
+  //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
+  // });
+
+  root.follow('tasks', {}, {fetch: true}).then(function(tasksResource) {
+    console.log(tasksResource, "should be an ObjectClassResource (fetch flag)")
   });
 
 // TODO: embedded models or collections in model
