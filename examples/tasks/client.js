@@ -53,11 +53,9 @@ define(['avalanche/resource/Resource',
   });
 
   root.follow('tasks').then(function(tasksResource) {
-    tasksResource = tasksResource.as(ObjectClassResource)
     var tasksStore = new Store(tasksResource, Task);
 
     tasksResource.follow('all').then(function(allTasksResource) {
-      allTasksResource = allTasksResource.as(CollectionResource)
       var allTasksCollection = new Collection(allTasksResource, Task);
       allTasksCollection.readAll().then(function(allTasks) {
         var newTask = ko.observable(null);
@@ -124,11 +122,6 @@ define(['avalanche/resource/Resource',
     });
   });
 
-  // root.follow('tasks').then(function(tasksResource) {
-  //   tasksResource = tasksResource.as(ObjectClassResource)
-  //   console.log(tasksResource, "should be an ObjectClassResource (follow, as)")
-  // });
-
   // root.follow('tasks', {}, {as: CollectionResource}).then(function(tasksResource) {
   //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
   // });
@@ -137,8 +130,16 @@ define(['avalanche/resource/Resource',
   //   console.log(tasksResource, "should be an ObjectClassResource (as flag)")
   // });
 
-  root.follow('tasks', {}, {fetch: true}).then(function(tasksResource) {
-    console.log(tasksResource, "should be an ObjectClassResource (fetch flag)")
+  root.follow('tasks').then(function(tasksResource) {
+    console.log(tasksResource, "should be an ObjectClassResource (auto fetch)")
+  });
+
+  root.follow('tasks', {}, {lazy: true}).then(function(tasksResource) {
+    console.log(tasksResource, "should be a Resource (lazy flag)")
+  });
+
+  root.follow('tasks', {}, {lazy: true, as: ObjectClassResource}).then(function(tasksResource) {
+    console.log(tasksResource, "should be a ObjectClassResource (lazy flag, as hint)")
   });
 
 // TODO: embedded models or collections in model

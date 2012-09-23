@@ -151,7 +151,19 @@ console.log("RECYCLE", resource, uri, data)
 
   // FIXME: move to mixin, not present on all Resources
   /**
-   * @return a new Resource if link found
+   * Follow a rel link and return the associated Resource.
+   * 
+   * @param rel the name of the relation to follow
+   * @param params URI parameters for the relation's URI template
+   * @param options
+   *          - "lazy" if true, returns an empty Resource pointing
+   *                   to the relation link without fetching the URI
+   *                   (default: false)
+   *          - "as" Resource class to use for the followed resource,
+   *                 particularly useful with lazy=true (when fetched,
+   *                 the class is automatically guessed based on
+   *                 content-type.
+   * @return a Promise of a new Resource if link found
    * @throw LinkNotFound
    */
   Resource.prototype.follow = function(rel, params, options) {
@@ -166,13 +178,15 @@ console.log("RECYCLE", resource, uri, data)
 
       var link = uriTemplate(rawLink, params);
 
+      var contentType;
       if (options.as) {
-        var contentType = options.as.prototype.contentType;
+        contentType = options.as.prototype.contentType;
+      }
+
+      if (options.lazy) {
         return Resource.make(link, contentType);
-      } else if (options.fetch) {
-        return Resource.make(link).fetch();
       } else {
-        return Resource.make(link);
+        return Resource.make(link, contentType).fetch();
       }
     });
   };
