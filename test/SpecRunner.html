@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Jasmine Spec Runner</title>
+	<link rel="shortcut icon" type="image/png" href="js/lib/jasmine-1.1.0.rc1/jasmine_favicon.png">
+	<link rel="stylesheet" type="text/css" href="js/lib/jasmine-1.1.0.rc1/jasmine.css">
+	<script type="text/javascript" src="js/lib/jasmine-1.1.0.rc1/jasmine.js"></script>
+	<script type="text/javascript" src="js/lib/jasmine-1.1.0.rc1/jasmine-html.js"></script>
+
+	<script type="text/javascript" src="js/lib/require.js"></script>
+
+	<script type="text/javascript">
+var exports = {};
+		require.config(
+			{
+//			  baseUrl : 'js',
+				paths: {
+					'jquery' : '../lib/jquery',
+					'promise' : '../lib/promise',
+
+					'avalanche' : '../js/avalanche',
+					'spec' : 'js/spec'
+                                }
+			}
+		);
+		require([
+			//include all specs to be run
+			'spec/ResourceSpec'
+		],
+			function() {
+				//run tests
+				jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+				jasmine.getEnv().execute();
+			});
+	</script>
+</head>
+
+<body>
+</body>
+</html>
