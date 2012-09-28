@@ -13,7 +13,6 @@
 var exports = {};
 		require.config(
 			{
-//			  baseUrl : 'js',
 				paths: {
 					'jquery' : '../lib/jquery',
 					'promise' : '../lib/promise',
@@ -23,10 +22,7 @@ var exports = {};
                                 }
 			}
 		);
-		require([
-			//include all specs to be run
-			'spec/ResourceSpec'
-		],
+		require(['spec/all'],
 			function() {
 				//run tests
 				jasmine.getEnv().addReporter(new jasmine.TrivialReporter());

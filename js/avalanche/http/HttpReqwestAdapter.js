@@ -1,4 +1,4 @@
-define(['jquery', 'promise'], function($, Promise) {
+define(['reqwest', 'promise'], function(reqwest, Promise) {
 
   return function() {
 
@@ -8,20 +8,19 @@ define(['jquery', 'promise'], function($, Promise) {
       options = options || {};
 
       var promise = new Promise();
-      var jsonData = JSON.stringify(data);
 
       var ajaxOptions = {
         url: uri,
-        type: method,
-        data: jsonData,
+        method: method,
+        data: data,
         // FIXME:
-        // cache, processData, contentType, etc (params/options?)
+        // type, contentType, etc (params/options?)
         // contentType: 'application/json; charset=utf-8',
         success: function(response, textStatus, req) {
           var contentType = req.getResponseHeader('Content-Type');
           promise.resolve({body: response, contentType: contentType});
         },
-        error: function(jqXHR, textStatus, errorThrown) {
+        error: function(err) {
           console.log("error:", arguments)
           var error = {}; // ???
           promise.reject(error);
@@ -29,14 +28,14 @@ define(['jquery', 'promise'], function($, Promise) {
       };
 
       if (options.accepts) {
-        ajaxOptions.dataType = 'json'
+        ajaxOptions.type = 'json'
         ajaxOptions.accepts = options.accepts
       }
       if (options.contentType) {
         ajaxOptions.contentType = options.contentType
       }
 
-      $.ajax(ajaxOptions);
+      reqwest(ajaxOptions);
       return promise;
     }
 
