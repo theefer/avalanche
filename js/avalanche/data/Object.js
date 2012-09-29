@@ -9,7 +9,7 @@ define(['knockout', './Model'], function(ko, Model) {
     this.v = ko.computed(function() {
       var model = this.model();
       if (model) {
-        return model.data();
+        return model.data;
       }
     }.bind(this))
 

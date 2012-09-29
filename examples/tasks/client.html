@@ -52,7 +52,7 @@
     <ul class="task-list" data-bind="template: { name: 'task-row', foreach: tasks }"></ul>
     <a href="#" data-bind="visible: !newTask(), click: addTask">Add</a>
     <div class="new-task" data-bind="if: newTask">
-      <div data-bind="template: { name: 'task-entry', data: newTask }"></div>
+      <div data-bind="template: { name: 'new-task-entry', data: newTask }"></div>
     </div>
     <p><a href="#" data-bind="visible: hasDone, click: removeDone">Remove done</a></p>
   </div>
@@ -61,25 +61,32 @@
     <p>Version: <span data-bind="text: version"></span></p>
   </footer>
 
+
   <script type="text/html" id="task-row">
     <li data-bind="template: {name: 'task-entry'}"></li>
   </script>
 
   <script type="text/html" id="task-entry">
-    <span class="task" data-bind="ifnot: editing, css: {'done': model().data().done}">
+    <span class="task" data-bind="ifnot: editing, css: {'done': model().data.done}">
       <!-- ko with: model -->
-      <input type="checkbox" data-bind="checked: data().done"/>
-      <span class="title display" data-bind="text: data().title, click: startEdit"></span>
-      <span class="tags" data-bind="foreach: data().tags">
+      <input type="checkbox" data-bind="checked: data.done"/>
+      <span class="title display" data-bind="text: data.title, click: startEdit"></span>
+      <span class="tags" data-bind="foreach: data.tags">
         <a href="#">#<span data-bind="text: data.name"></span></a>
       </span>
-      &mdash; <em><span data-bind="text: data().author.data.nickname"></span></em>
+      &mdash; <em><span data-bind="text: data.author.data.nickname"></span></em>
       <!-- /ko -->
     </span>
     <form data-bind="if: editing, submit: saveAndView">
       <!-- ko with: model -->
-      <input type="title edit" class="title" data-bind="value: data().title, valueUpdate: 'afterkeydown', hasfocus: editing" placeholder="Type in a title"/>
+      <input type="title edit" class="title" data-bind="value: data.title, valueUpdate: 'afterkeydown', hasfocus: editing" placeholder="Type in a title"/>
       <!-- /ko -->
+    </form>
+  </script>
+
+  <script type="text/html" id="new-task-entry">
+    <form data-bind="submit: finishEdit">
+      <input type="title edit" class="title" data-bind="value: data.title, valueUpdate: 'afterkeydown', hasfocus: editing" placeholder="Type in a title"/>
     </form>
   </script>
 

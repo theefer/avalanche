@@ -49,10 +49,10 @@ define(['avalanche/resource/Resource',
           // FIXME: arg, defaults not here?
           newTaskModel.editing(true);
 
-          // FIXME: don't reuse template, better VM
+          // TODO: don't rely on state for signals
           var handle = newTaskModel.editing.subscribe(function(editing) {
             if (!editing) {
-              console.log("done editing, save to server now", newTaskModel.data())
+              console.log("done editing, save to server now", newTaskModel.data)
               allTasksCollection.append(newTaskModel).then(function() {
                 console.log("appending ok!", arguments)
                 newTask(null);
@@ -115,8 +115,8 @@ define(['avalanche/resource/Resource',
 
     // showcase single shared model instance:
     tasksStore.getById(1).then(function(taskObject) {
-      console.log("first task: ", taskObject, taskObject.model().data().title(), taskObject.model().data().done());
-      taskObject.model().data().done.subscribe(function(done) {
+      console.log("first task: ", taskObject, taskObject.model().data.title(), taskObject.model().data.done());
+      taskObject.model().data.done.subscribe(function(done) {
         console.log("first task done is now: ", done)
       });
     });
