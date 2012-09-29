@@ -16,23 +16,6 @@ define(['avalanche/resource/Resource',
     Model.apply(this, arguments)
 
     this.editing = ko.observable(false);
-    this.editing.subscribe(function(editing) {
-      if (!editing) {
-        console.log("finished editing, save")
-        if (this.object) {
-          this.object.write()
-        }
-        // FIXME: object hack, should not be necessary?
-      }
-    }.bind(this));
-
-    this.data().done.subscribe(function(isDone) {
-      console.log("sync toggle done: ", isDone)
-      if (this.object) {
-        this.object.write();
-        // FIXME: object hack, should not be necessary?
-      }
-    }.bind(this));
   }
   Task.prototype = Model.prototype
   Task.prototype.constructor = Task
@@ -66,6 +49,7 @@ define(['avalanche/resource/Resource',
           // FIXME: arg, defaults not here?
           newTaskModel.editing(true);
 
+          // FIXME: don't reuse template, better VM
           var handle = newTaskModel.editing.subscribe(function(editing) {
             if (!editing) {
               console.log("done editing, save to server now", newTaskModel.data())
@@ -101,7 +85,23 @@ define(['avalanche/resource/Resource',
           return tasks.every(function(t){ return t.v().done(); });
         });
 
-        var mainModel = {tasks: allTasks, newTask: newTask, hasDone: hasDone,
+        // TODO: write to server when toggle done
+        var allTaskViews = ko.computed(function() {
+          return allTasks().map(function(t) {
+            return {
+              editing: t.model().editing,
+              saveAndView: function(){
+                t.write().then(function() {
+                  t.model().finishEdit();
+                });
+              },
+              model: t.model,
+              modelData: t.v()
+            };
+          });
+        });
+
+        var mainModel = {tasks: allTaskViews, newTask: newTask, hasDone: hasDone,
                          allDoneToggle: allDoneToggle,
                          addTask: addTask, removeDone: removeDone};
 

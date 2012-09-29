@@ -1,8 +1,7 @@
 define(['knockout', 'knockout.mapping'], function(ko, koMapping) {
   var Model = function(initialData, containerObject) {
+    // FIXME: needs to be observable? iff observe add/remove props - observableObject?
     this.data = ko.observable(koMapping.fromJS(initialData || {}));
-    this.object = containerObject
-    // FIXME: do we want bi-directional bindings? ok if optional?
   };
 
   /**
