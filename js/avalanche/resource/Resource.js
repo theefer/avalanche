@@ -109,7 +109,13 @@ console.log("RECYCLE", resource, uri, data)
 
   Resource.prototype.post = function(data) {
     // FIXME: cache
-    return this._backend.post(data).then(function(resp) {
+    var options = {}
+    if (this.accepts) {
+      // FIXME: hack - how to pick one?
+      // options.contentType = this.accepts.json
+      options.contentType = 'application/json'
+    }
+    return this._backend.post(data, options).then(function(resp) {
       return resp.body;
     });
   };

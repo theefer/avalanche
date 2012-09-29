@@ -13,6 +13,10 @@ define(['./Object', './Model'], function(Objekt, Model) {
     }.bind(this));
   };
 
+  Store.prototype.createFromModel = function(model) {
+    return this.create(model.toJS());
+  };
+
   Store.prototype.getById = function(id) {
     // FIXME: always {id}?
     return this.resource.getByKey({id: id}).then(function(resource) {

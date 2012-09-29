@@ -1,6 +1,6 @@
 define(['knockout', 'knockout.mapping'], function(ko, koMapping) {
   var Model = function(initialData, containerObject) {
-    this.data = ko.observable(koMapping.fromJS(initialData));
+    this.data = ko.observable(koMapping.fromJS(initialData || {}));
     this.object = containerObject
     // FIXME: do we want bi-directional bindings? ok if optional?
   };
