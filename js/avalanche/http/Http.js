@@ -1,12 +1,11 @@
-define(['./HttpJqueryAdapter'], function(HttpJqueryAdapter) {
+define(['./HttpReqwestAdapter'], function(HttpReqwestAdapter) {
 
   return function(uri, options) {
 
-    // var httpAdapter = new HttpJqueryAdapter; // FIXME: or from options
     options = options || {};
 
     // FIXME: only load if necessary, or default elsewhere?
-    var httpAdapter = options.adapter || new HttpJqueryAdapter;
+    var httpAdapter = options.adapter || new HttpReqwestAdapter;
 
     /**
      * @return a new Promise(data)

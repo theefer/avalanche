@@ -4,17 +4,14 @@
   <script type="text/javascript">
   require = ({
     paths: {
-      'avalanche': '../../js/avalanche',
+      'avalanche':        '../../js/avalanche',
 
-      'jquery':           '../../lib/jquery',
       'promise':          '../../lib/promise',
+      'reqwest':          '../../lib/reqwest-0.4.5',
       'knockout':         '../../lib/knockout-2.1.0.debug',
       'knockout.mapping': '../../lib/knockout.mapping-2.2.1.debug'
     },
     shim: {
-      'jquery': {
-        exports: '$'
-      },
       'promise': {
         exports: 'Deferred'
       }

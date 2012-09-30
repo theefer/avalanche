@@ -8,34 +8,50 @@ define(['reqwest', 'promise'], function(reqwest, Promise) {
       options = options || {};
 
       var promise = new Promise();
+      var req;
 
       var ajaxOptions = {
         url: uri,
         method: method,
         data: data,
-        // FIXME:
-        // type, contentType, etc (params/options?)
-        // contentType: 'application/json; charset=utf-8',
-        success: function(response, textStatus, req) {
-          var contentType = req.getResponseHeader('Content-Type');
-          promise.resolve({body: response, contentType: contentType});
+        success: function(response) {
+          var request = req.request;
+          promise.resolve({
+            status:      request.status,
+            statusText:  request.statusText,
+            contentType: request.getResponseHeader('Content-Type'),
+            body:        response
+          });
         },
-        error: function(err) {
-          console.log("error:", arguments)
-          var error = {}; // ???
+        error: function(request) {
+          // TODO: parse body if JSON
+          var error = {
+            status:      request.status,
+            statusText:  request.statusText,
+            contentType: request.getResponseHeader('Content-Type'),
+            body:        request.responseText
+          };
           promise.reject(error);
         }
       };
 
+      // FIXME: accept, type, contentType, etc (params/options?)
+      // expecting
       if (options.accepts) {
         ajaxOptions.type = 'json'
         ajaxOptions.accepts = options.accepts
+        // ajaxOptions.headers.Accept = 'json'
+      } else {
+        // FIXME: temporary hacky default
+        ajaxOptions.type = 'json'
       }
+
+      // sending
       if (options.contentType) {
         ajaxOptions.contentType = options.contentType
       }
 
-      reqwest(ajaxOptions);
+      req = reqwest(ajaxOptions);
       return promise;
     }
 
