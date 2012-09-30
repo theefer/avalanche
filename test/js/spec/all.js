@@ -1,4 +1,5 @@
 define([
   'spec/HttpSpec',
-  'spec/ResourceSpec'
+  'spec/ResourceSpec',
+  'spec/util/UriTemplateSpec'
 ]);

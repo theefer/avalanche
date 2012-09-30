@@ -1,4 +1,5 @@
-define(['../http/Http', 'promise', '../util/oneAtATime'], function(Http, Promise, oneAtATime) {
+define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
+       function(Http, Promise, oneAtATime, uriTemplate) {
 
   var Resource = function(uri, data) {
     this.uri = uri;
@@ -140,16 +141,6 @@ console.log("RECYCLE", resource, uri, data)
     }.bind(this));
   };
 
-
-  function uriTemplate(template, params) {
-    return template.replace(/{(.*?)}/g, function(match, varName) {
-      var val = params[varName];
-      if (!val) {
-        throw new Error("Missing parameter for URI template variable: " + varName)
-      }
-      return val;
-    });
-  }
 
   function findRel(links, rel) {
     // FIXME: better lookup
