@@ -2,8 +2,6 @@ define(['reqwest', 'promise'], function(reqwest, Promise) {
 
   return function() {
 
-    // FIXME: single query if multiple identical requests
-
     function ajax(method, uri, data, options) {
       options = options || {};
 

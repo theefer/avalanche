@@ -10,15 +10,16 @@
 	<script type="text/javascript" src="js/lib/require.js"></script>
 
 	<script type="text/javascript">
-var exports = {};
+		exports = {}; // for promise...
 		require.config(
 			{
 				paths: {
-					'jquery' : '../lib/jquery',
-					'promise' : '../lib/promise',
-					'reqwest' : '../lib/reqwest-0.4.5',
-
 					'avalanche' : '../js/avalanche',
+
+					'promise' : '../lib/promise',
+
+					'reqwest' : 'js/mock/reqwest',
+
 					'spec' : 'js/spec'
                                 }
 			}
