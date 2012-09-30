@@ -1,7 +1,5 @@
 define(['avalanche/util/uriTemplate'], function(uriTemplate) {
   describe("uriTemplate", function() {
-    var resource;
-
     it("should return a parameter-free URI string unchanged", function() {
       var result = uriTemplate('/some/uri');
       expect(result).toEqual('/some/uri');
@@ -68,6 +66,6 @@ define(['avalanche/util/uriTemplate'], function(uriTemplate) {
   });
 
   return {
-    name: 'ResourceSpec'
+    name: 'UriTemplateSpec'
   };
 });
