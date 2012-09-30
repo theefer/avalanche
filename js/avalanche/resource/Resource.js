@@ -6,6 +6,13 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
     this._data = data;
     this._backend = new Http(uri); // FIXME: or from options
 
+    // TODO:
+    // - type: customizable, subclasses may enforce JSON
+    // - accept: derived from type, and subclasses may override
+    // - contentType: method options, and subclasses may override as JSON or custom mediatype
+
+    // TODO: manage cache on GET, PUT, DELETE, subclasses may disable and manually override (esp. PUT)
+
     // Note: subclasses can override contentType on their prototype
     if (this.contentType) {
       this.accepts = {'json': this.contentType}
@@ -14,12 +21,15 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
 
   // Resource.prototype.contentType = 'application/json'
 
+  // TODO: extract registering into a common helper?
 
   var resourceClassByContentType = Resource.resourceClassByContentType = {};
   Resource.registerResourceClass = function(resourceClass) {
     var contentType = resourceClass.prototype.contentType;
     resourceClassByContentType[contentType] = resourceClass;
   };
+
+  // TODO: extract caching into a common helper
 
   var resourceByUri = Resource.resourceByUri = {};
   var resourceByUriAndContentType = Resource.resourceByUriAndContentType = {};
