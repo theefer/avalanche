@@ -1,12 +1,14 @@
 define(['./Resource', './ObjectResource'], function(Resource, ObjectResource) {
+  var contentType = 'application/vnd.objectclass+json';
+
   var ObjectClassResource = function(uri, data) {
-    Resource.apply(this, arguments);
+    Resource.call(this, uri, data, {type: 'json', accept: contentType});
   };
 
   ObjectClassResource.prototype = new Resource;
   ObjectClassResource.prototype.constructor = Resource;
 
-  ObjectClassResource.prototype.contentType = 'application/vnd.objectclass+json'
+  ObjectClassResource.prototype.contentType = contentType
 
 
   ObjectClassResource.prototype.create = function(data) {

@@ -5,13 +5,26 @@ define(['reqwest', 'promise'], function(reqwest, Promise) {
     function ajax(method, uri, data, options) {
       options = options || {};
 
+      // FIXME: defaults?
+      // if (!options.type) {
+      // }
+
+      // if (!options.accept) {
+      // }
+
+      // if (data && !options.contentType) {
+      // }
+
       var promise = new Promise();
       var req;
 
       var ajaxOptions = {
-        url: uri,
-        method: method,
-        data: data,
+        url:         uri,
+        method:      method,
+        data:        data,
+        type:        options.type,
+        accept:      options.accept,
+        contentType: data && options.contentType,
         success: function(response) {
           var request = req.request;
           promise.resolve({
@@ -33,28 +46,12 @@ define(['reqwest', 'promise'], function(reqwest, Promise) {
         }
       };
 
-      // FIXME: accept, type, contentType, etc (params/options?)
-      // expecting
-      if (options.accepts) {
-        ajaxOptions.type = 'json'
-        ajaxOptions.accepts = options.accepts
-        // ajaxOptions.headers.Accept = 'json'
-      } else {
-        // FIXME: temporary hacky default
-        ajaxOptions.type = 'json'
-      }
-
-      // sending
-      if (options.contentType) {
-        ajaxOptions.contentType = options.contentType
-      }
-
       req = reqwest(ajaxOptions);
       return promise;
     }
 
-    function get(uri, params, options) {
-      return ajax('GET', uri, params, options);
+    function get(uri, data, options) {
+      return ajax('GET', uri, data, options);
     }
     function put(uri, data, options) {
       return ajax('PUT', uri, data, options);

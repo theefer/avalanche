@@ -1,22 +1,18 @@
 define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
        function(Http, Promise, oneAtATime, uriTemplate) {
 
-  var Resource = function(uri, data) {
+  var Resource = function(uri, data, options) {
     this.uri = uri;
     this._data = data;
-    this._backend = new Http(uri); // FIXME: or from options
+// FIXME: init contentType of data
+
+    // TODO: document options: type, accept, adapter
+    this._backend = new Http(uri, options);
 
     // TODO:
-    // - type: customizable, subclasses may enforce JSON
-    // - accept: derived from type, and subclasses may override
     // - contentType: method options, and subclasses may override as JSON or custom mediatype
 
-    // TODO: manage cache on GET, PUT, DELETE, subclasses may disable and manually override (esp. PUT)
-
-    // Note: subclasses can override contentType on their prototype
-    if (this.contentType) {
-      this.accepts = {'json': this.contentType}
-    }
+    // TODO: manage cache PUT, subclasses may disable and manually override
   };
 
   // Resource.prototype.contentType = 'application/json'
@@ -78,64 +74,53 @@ console.log("RECYCLE", resource, uri, data)
   Resource.prototype.get = function(params, options) {
     options = options || {};
     if (!options.noCache && this._data !== undefined) {
-      var promise = new Promise()
-      promise.resolve(this._data)
       console.log("CACHE HIT", this._data, this.uri)
-      return promise
+      var promise = new Promise();
+      promise.resolve(this._data);
+      return promise;
     } else if (!options.fromCache) {
       // FIXME: also use parameters to build the unique key!
       // only issue one GET at a time
       return oneAtATime('get' + this.uri, function() {
-        var options = {}
-        if (this.accepts) {
-          options.accepts = this.accepts
-        }
         return this._backend.get(params, options).then(function(resp) {
+          console.log("CACHE NOW", resp.body, this.uri)
           this._data = resp.body;
-          this._contentType = resp.contentType
-          console.log("CACHE NOW", this._data, this.uri)
+          this._contentType = resp.contentType;
           return resp.body;
         }.bind(this));
       }.bind(this));
     } else {
-      var promise = new Promise()
-      promise.reject()
       console.log("GET FAIL", this.uri)
-      return promise
+      var promise = new Promise();
+      promise.reject();
+      return promise;
     }
   };
 
-  Resource.prototype.put = function(data) {
-    // FIXME: cache
-    var options = {}
-    if (this.accepts) {
-      // FIXME: hack - how to pick one?
-      // options.contentType = this.accepts.json
-      options.contentType = 'application/json'
-    }
+  Resource.prototype.put = function(data, options) {
     return this._backend.put(data, options).then(function(resp) {
+      // FIXME: cache, unless disabled
       return resp.body;
     });
   };
 
-  Resource.prototype.post = function(data) {
-    // FIXME: cache
-    var options = {}
-    if (this.accepts) {
-      // FIXME: hack - how to pick one?
-      // options.contentType = this.accepts.json
-      options.contentType = 'application/json'
-    }
+  Resource.prototype.post = function(data, options) {
     return this._backend.post(data, options).then(function(resp) {
       return resp.body;
     });
   };
 
-  Resource.prototype.del = function() {
-    // FIXME: cache
-    return this._backend.del().then(function(resp) {
-      return resp.body;
-    });
+  Resource.prototype.del = function(options) {
+    // only issue one DELETE at a time
+    return oneAtATime('delete' + this.uri, function() {
+      return this._backend.del(options).then(function(resp) {
+        // dispose of internal cached state
+        delete this._data;
+        delete this._contentType;
+
+        return resp.body;
+      }.bind(this));
+    }.bind(this));
   };
 
   /**

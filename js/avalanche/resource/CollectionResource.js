@@ -1,18 +1,18 @@
 define(['./Resource', './ObjectResource'], function(Resource, ObjectResource) {
+  var contentType = 'application/vnd.collection+json';
+
   var CollectionResource = function(uri, data) {
-    Resource.apply(this, arguments);
+    Resource.call(this, uri, data, {type: 'json', accept: contentType});
   };
 
   CollectionResource.prototype = new Resource;
   CollectionResource.prototype.constructor = Resource;
 
-  CollectionResource.prototype.contentType = 'application/vnd.collection+json'
+  CollectionResource.prototype.contentType = contentType
 
 
   CollectionResource.prototype.readAll = function(params, options) {
-console.log("in")
     return this.get(params, options).then(function(body) {
-console.log("in")
       var data = body && body.data;
       if (data) {
         var resources = [];
