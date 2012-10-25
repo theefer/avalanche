@@ -9,6 +9,9 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
     // TODO: document options: type, accept, adapter
     this._backend = new Http(uri, options);
 
+    // FIXME: use cache instead of Resource.make
+    // this._cache = options.cache
+
     // TODO:
     // - contentType: method options, and subclasses may override as JSON or custom mediatype
 
@@ -19,6 +22,7 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
 
   // TODO: extract registering into a common helper?
 
+  // FIXME: deprecate, use resource/registry singleton instead
   var resourceClassByContentType = Resource.resourceClassByContentType = {};
   Resource.registerResourceClass = function(resourceClass) {
     var contentType = resourceClass.prototype.contentType;
@@ -26,7 +30,6 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
   };
 
   // TODO: extract caching into a common helper
-
   var resourceByUri = Resource.resourceByUri = {};
   var resourceByUriAndContentType = Resource.resourceByUriAndContentType = {};
   Resource.make = function(uri, contentType, data) {
