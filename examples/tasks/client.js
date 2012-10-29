@@ -1,15 +1,16 @@
-define(['avalanche/resource/Resource',
+define(['avalanche/Api', 'avalanche/http/adapters/Reqwest',
         'avalanche/resource/ObjectClassResource', 'avalanche/resource/CollectionResource',
         'avalanche/data/Store', 'avalanche/data/Object', 'avalanche/data/Collection', 'avalanche/data/Model',
         'knockout',
         'avalanche/compat/bind'],
-       function(Resource,
+       function(Api, ReqwestAdapter,
                 ObjectClassResource, CollectionResource,
                 Store, Objekt, Collection, Model,
                 ko) {
 
   var apiUri = 'http://localhost:4567/api';
-  var root = new Resource(apiUri);
+  var api = new Api(apiUri, {type: 'json', httpAdapter: ReqwestAdapter});
+  api.root().then(function(root) {
 
   var appModel = {
     version: ko.observable()
@@ -188,4 +189,5 @@ define(['avalanche/resource/Resource',
 // - obs.subscribeNext(function() {}) => trigger next change only
 // - obs.syncTo(otherObs) => computed vs bound to view, who wins?
 
+  });
 });
