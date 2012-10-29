@@ -34,10 +34,11 @@ define(['avalanche/resource/Resource',
 
   root.follow('version').then(function(versionResource) {
     versionResource.get().then(function(version) {
+      var footer = document.getElementById('appFooter');
       console.log("API version: ", version);
       // TODO: how to sync this, i.e. bind version to the resource after the fact?
       appModel.version(version);
-      ko.applyBindings(appModel);
+      ko.applyBindings(appModel, footer);
     });
   });
 
