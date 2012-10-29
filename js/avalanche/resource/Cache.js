@@ -1,69 +1,63 @@
 define(['./registry'], function(resourceClassRegistry) {
 
-  // FIXME: put methods on prototype?
+  var NO_CONTENT_TYPE = '__default__';
+
   var ResourceCache = function(defaultResourceClass, resourceOptions) {
+    this.defaultResourceClass = defaultResourceClass;
+    this.resourceOptions = resourceOptions;
+    this.resourceOptions.cache = this;
 
-    resourceOptions.cache = this
+    this._resourceByUri = {};
+  };
 
-    var NO_CONTENT_TYPE = '__default__';
-    var resourceByUri = {};
+  ResourceCache.prototype._lookup = function(uri, contentType) {
+    return this._resourceByUri[uri] && this._resourceByUri[uri][contentType];
+  };
 
-    var lookup = function(uri, contentType) {
-      return resourceByUri[uri] && resourceByUri[uri][contentType];
-    };
+  ResourceCache.prototype._store = function(uri, contentType, resource) {
+    if (!this._resourceByUri[uri]) {
+      this._resourceByUri[uri] = {};
+    }
+    this._resourceByUri[uri][contentType] = resource;
+  };
 
-    var store = function(uri, contentType, resource) {
-      if (!resourceByUri[uri]) {
-          resourceByUri[uri] = {};
-      }
-      resourceByUri[uri][contentType] = resource;
+  ResourceCache.prototype.byUri = function(uri) {
+    if (!uri) {
+      throw new Error('Cannot make a Resource without a URI!');
     }
 
-    var byUri = function(uri) {
-      if (!uri) {
-        throw new Error('Cannot make a Resource without a URI!');
-      }
-      console.log("ResourceCache.byUri", uri)
+    var resource = this._lookup(uri, NO_CONTENT_TYPE);
+    if (!resource) {
+      resource = new this.defaultResourceClass(uri, undefined, this.resourceOptions);
+      this._store(uri, NO_CONTENT_TYPE, resource);
+      console.log("MAKE NEW", resource, uri)
+    }
+    else {
+      console.log("RECYCLE", resource, uri)
+    }
 
-      var resource = lookup(uri, NO_CONTENT_TYPE);
-      if (!resource) {
-        resource = new defaultResourceClass(uri, undefined, resourceOptions);
-        store(uri, NO_CONTENT_TYPE, resource);
-        console.log("MAKE NEW", resource, uri)
-      }
-      else {
-        console.log("RECYCLE", resource, uri)
-      }
+    return resource;
+  };
 
-      return resource;
-    };
+  ResourceCache.prototype.byUriAndContentType = function(uri, contentType, data) {
+    if (!uri) {
+      throw new Error('Cannot make a Resource without a URI!');
+    }
 
-    var byUriAndContentType = function(uri, contentType, data) {
-      if (!uri) {
-        throw new Error('Cannot make a Resource without a URI!');
-      }
-      console.log("ResourceCache.byUriAndContentType", uri, contentType, data)
+    var resource = this._lookup(uri, contentType);
+    if (!resource) {
+      var resourceClass = resourceClassRegistry[contentType] || this.defaultResourceClass;
+      resource = new resourceClass(uri, data, this.resourceOptions);
+      console.log("MAKE NEW", resource, uri, contentType, data)
+      this._store(uri, contentType, resource);
+      this._store(uri, NO_CONTENT_TYPE, resource);
+      // FIXME: is this working? what if setup with another content type before, etc?
+    }
+    else {
+      console.log("RECYCLE", resource, uri, contentType, data)
+    }
 
-      var resource = lookup(uri, contentType);
-      if (!resource) {
-        var resourceClass = resourceClassRegistry[contentType] || defaultResourceClass;
-        resource = new resourceClass(uri, data, resourceOptions);
-        console.log("MAKE NEW", resource, uri, contentType, data)
-        store(uri, contentType, resource);
-        store(uri, NO_CONTENT_TYPE, resource);
-        // FIXME: is this working? what if setup with another content type before, etc?
-      }
-      else {
-        console.log("RECYCLE", resource, uri, contentType, data)
-      }
-
-      return resource;
-    };
-
-    return {
-      byUri: byUri,
-      byUriAndContentType: byUriAndContentType
-    };
+    return resource;
   };
 
   return ResourceCache;

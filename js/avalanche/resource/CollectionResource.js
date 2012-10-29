@@ -23,12 +23,12 @@ define(['./Resource', './ObjectResource', './registry'],
           // FIXME: auto cast to correct subclass? or use ObjectResource?
           // var res = new Resource(data[i].uri, data[i]).as(ObjectResource)
           var contentType = ObjectResource.prototype.contentType
-          var res = Resource.make(data[i].uri, contentType, data[i])
+          var res = this._cache.byUriAndContentType(data[i].uri, contentType, data[i]);
           resources.push(res)
         }
         return resources
       }
-    });
+    }.bind(this));
   };
 
   // CollectionResource.prototype.readRange = function() {
@@ -40,18 +40,19 @@ define(['./Resource', './ObjectResource', './registry'],
       return resource.post(data).then(function(body) {
         if (body) {
           var contentType = ObjectResource.prototype.contentType
-          return Resource.make(body.uri, contentType, body)
+          return this._cache.byUriAndContentType(body.uri, contentType, body)
+          // return Resource.make(body.uri, contentType, body)
           // FIXME: auto cast to correct subclass? or use ObjectResource?
           // return new Resource(body.uri, body).as(ObjectResource)
         }
-      }, function(){});
+      }.bind(this), function(){});
       // FIXME: oddly required to trigger errback down the line
-    });
+    }.bind(this));
   };
 
   CollectionResource.prototype.replace = function(data) {
     // return this.follow('append').then(function(resource) {
-      return this.put(data).then(function(body) {
+    return this.put(data).then(function(body) {
       var data = body && body.data;
       if (data) {
         var resources = [];
@@ -59,12 +60,12 @@ define(['./Resource', './ObjectResource', './registry'],
           // FIXME: auto cast to correct subclass? or use ObjectResource?
           // var res = new Resource(data[i].uri, data[i]).as(ObjectResource)
           var contentType = ObjectResource.prototype.contentType
-          var res = Resource.make(data[i].uri, contentType, data[i])
+          var res = this._cache.byUriAndContentType(data[i].uri, contentType, data[i]);
           resources.push(res)
         }
         return resources
       }
-      })
+    }.bind(this))
       // FIXME: oddly required to trigger errback down the line
     // });
   };

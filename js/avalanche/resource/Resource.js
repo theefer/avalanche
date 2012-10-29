@@ -9,8 +9,7 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
     // TODO: document options: type, accept, adapter
     this._backend = new Http(uri, options);
 
-    // FIXME: use cache instead of Resource.make
-    // this._cache = options.cache
+    this._cache = options.cache;
 
     // TODO:
     // - contentType: method options, and subclasses may override as JSON or custom mediatype
@@ -19,55 +18,6 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
   };
 
   // Resource.prototype.contentType = 'application/json'
-
-  // TODO: extract registering into a common helper?
-
-  // FIXME: deprecate, use resource/registry singleton instead
-  var resourceClassByContentType = Resource.resourceClassByContentType = {};
-  Resource.registerResourceClass = function(resourceClass) {
-    var contentType = resourceClass.prototype.contentType;
-    resourceClassByContentType[contentType] = resourceClass;
-  };
-
-  // TODO: extract caching into a common helper
-  var resourceByUri = Resource.resourceByUri = {};
-  var resourceByUriAndContentType = Resource.resourceByUriAndContentType = {};
-  Resource.make = function(uri, contentType, data) {
-    if (!uri) {
-      throw new Error('Cannot make a Resource without a URI!');
-    }
-console.log("Resource.MAKE", uri, contentType, data)
-
-    var resource;
-    if (contentType) {
-      var key = uri + ' ' + contentType;
-      resource = resourceByUriAndContentType[key];
-
-      if (!resource) {
-        var resourceClass = resourceClassByContentType[contentType] || Resource;
-        resource = new resourceClass(uri, data);
-console.log("MAKE NEW", resource, uri, contentType, data)
-        resourceByUriAndContentType[key] = resource;
-        resourceByUri[uri] = resource;
-        // FIXME: is this working? what if setup with another content type before, etc?
-      }
-else {
-console.log("RECYCLE", resource, uri, contentType, data)
-}
-    } else {
-      resource = resourceByUri[uri];
-      if (!resource) {
-        resource = new Resource(uri, data);
-        resourceByUri[uri] = resource;
-console.log("MAKE NEW", resource, uri, data)
-      }
-else {
-console.log("RECYCLE", resource, uri, data)
-}
-    }
-
-    return resource;
-  };
 
 
   /**
@@ -134,8 +84,8 @@ console.log("RECYCLE", resource, uri, data)
       // FIXME: this._contentType might not be initialized, so might
       //        not be able to resolve the real type of the resource
       //        - fetch again?
-      var contentType = this._contentType
-      return Resource.make(this.uri, contentType, data);
+      var contentType = this._contentType;
+      return this._cache.byUriAndContentType(this.uri, contentType, data);
     }.bind(this));
   };
 
@@ -185,16 +135,16 @@ console.log("RECYCLE", resource, uri, data)
       }
 
       if (options.lazy) {
-        return Resource.make(link, contentType);
+        return this._cache.byUriAndContentType(link, contentType);
       } else {
-        return Resource.make(link, contentType).fetch();
+        return this._cache.byUriAndContentType(link, contentType).fetch();
       }
-    });
+    }.bind(this));
   };
 
   Resource.prototype.as = function(resourceClass) {
     var contentType = resourceClass.prototype.contentType;
-    return Resource.make(this.uri, contentType, this._data);
+    return this._cache.byUriAndContentType(this.uri, contentType, this._data);
   };
 
   return Resource;

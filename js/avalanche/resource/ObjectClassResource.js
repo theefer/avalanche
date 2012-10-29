@@ -19,8 +19,8 @@ define(['./Resource', './ObjectResource', './registry'],
       // FIXME: auto cast to correct subclass? or use ObjectResource?
       // return new Resource(body.uri, body).as(ObjectResource)
       var contentType = ObjectResource.prototype.contentType
-      return Resource.make(body.uri, contentType, body)
-    });
+      return this._cache.byUriAndContentType(body.uri, contentType, body);
+    }.bind(this));
   };
 
   ObjectClassResource.prototype.getByKey = function(keyValue) {
