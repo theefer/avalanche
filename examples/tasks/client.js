@@ -11,6 +11,10 @@ define(['avalanche/resource/Resource',
   var apiUri = 'http://localhost:4567/api';
   var root = new Resource(apiUri);
 
+  var appModel = {
+    version: ko.observable()
+  };
+
   // FIXME: nicer way to define your own Models
   var Task = function() {
     Model.apply(this, arguments)
@@ -31,7 +35,9 @@ define(['avalanche/resource/Resource',
   root.follow('version').then(function(versionResource) {
     versionResource.get().then(function(version) {
       console.log("API version: ", version);
-      ko.applyBindings({version: version}, document.getElementById('appFooter'));
+      // TODO: how to sync this, i.e. bind version to the resource after the fact?
+      appModel.version(version);
+      ko.applyBindings(appModel);
     });
   });
 
