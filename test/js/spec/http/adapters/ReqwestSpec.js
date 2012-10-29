@@ -1,4 +1,4 @@
-define(['avalanche/http/HttpReqwestAdapter'], function(HttpReqwestAdapter) {
+define(['avalanche/http/adapters/Reqwest'], function(ReqwestAdapter) {
   var uri = '/some/uri';
 
   function createFakeRequest() {
@@ -7,27 +7,27 @@ define(['avalanche/http/HttpReqwestAdapter'], function(HttpReqwestAdapter) {
     };
   }
 
-  describe("HttpReqwestAdapter", function() {
+  describe("ReqwestAdapter", function() {
     var adapter;
 
     beforeEach(function() {
-      adapter = new HttpReqwestAdapter;
+      adapter = new ReqwestAdapter;
     });
 
-    it("should be able to create an HttpReqwestAdapter", function() {
+    it("should be able to create an ReqwestAdapter", function() {
       expect(!!adapter).toEqual(true);
     });
   });
 
 
-  describe("HttpReqwestAdapter.get", function() {
+  describe("ReqwestAdapter.get", function() {
     var adapter;
     var request;
     var responseContentType
     var responseBody;
 
     beforeEach(function() {
-      adapter = new HttpReqwestAdapter;
+      adapter = new ReqwestAdapter;
 
       request = createFakeRequest();
     });
@@ -76,6 +76,6 @@ define(['avalanche/http/HttpReqwestAdapter'], function(HttpReqwestAdapter) {
   // TODO: del
 
   return {
-    name: 'HttpReqwestAdapterSpec'
+    name: 'ReqwestAdapterSpec'
   };
 });

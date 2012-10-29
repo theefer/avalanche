@@ -1,4 +1,4 @@
-define(['./HttpReqwestAdapter'], function(HttpReqwestAdapter) {
+define(function() {
 
   var defaultType = 'json';
   var typeAcceptMap = {
@@ -32,8 +32,8 @@ define(['./HttpReqwestAdapter'], function(HttpReqwestAdapter) {
       return o;
     }
 
-    // FIXME: only load if necessary, or default elsewhere?
-    var httpAdapter = options.adapter || new HttpReqwestAdapter;
+    // FIXME: or throw error if none provided
+    var httpAdapter = options.httpAdapter
 
     /**
      * @return a new Promise(data)
