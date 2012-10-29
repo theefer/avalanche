@@ -1,6 +1,6 @@
 define(['knockout', './Object', './Model'], function(ko, Objekt, Model) {
   var Collection = function(resource, modelClass) {
-    // FIXME: required (?), or else default to (?, Objekt)
+    // FIXME: check for CollectionResource?
     this.resource = resource;
     this.modelClass = modelClass || Model;
 
