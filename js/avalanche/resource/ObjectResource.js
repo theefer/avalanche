@@ -1,11 +1,14 @@
-define(['./Resource'], function(Resource) {
+define(['./Resource', './registry'],
+       function(Resource, resourceClassRegistry) {
+
   var contentType = 'application/vnd.object+json';
 
-  var ObjectResource = function(uri, data) {
-    Resource.call(this, uri, data, {type: 'json', accept: contentType});
+  var ObjectResource = function(uri, data, options) {
+    // FIXME: merge in: {type: 'json', accept: contentType}
+    Resource.call(this, uri, data, options);
   };
 
-  ObjectResource.prototype = new Resource;
+  ObjectResource.prototype = Object.create(Resource.prototype);
   ObjectResource.prototype.constructor = Resource;
 
   ObjectResource.prototype.contentType = contentType
@@ -32,7 +35,7 @@ define(['./Resource'], function(Resource) {
     });
   };
 
-  Resource.registerResourceClass(ObjectResource);
+  resourceClassRegistry.register(ObjectResource);
 
   return ObjectResource;
 });

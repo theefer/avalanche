@@ -1,11 +1,14 @@
-define(['./Resource', './ObjectResource'], function(Resource, ObjectResource) {
+define(['./Resource', './ObjectResource', './registry'],
+       function(Resource, ObjectResource, resourceClassRegistry) {
+
   var contentType = 'application/vnd.collection+json';
 
-  var CollectionResource = function(uri, data) {
-    Resource.call(this, uri, data, {type: 'json', accept: contentType});
+  var CollectionResource = function(uri, data, options) {
+    // FIXME: merge in: {type: 'json', accept: contentType}
+    Resource.call(this, uri, data, options);
   };
 
-  CollectionResource.prototype = new Resource;
+  CollectionResource.prototype = Object.create(Resource.prototype);
   CollectionResource.prototype.constructor = Resource;
 
   CollectionResource.prototype.contentType = contentType
@@ -68,7 +71,7 @@ define(['./Resource', './ObjectResource'], function(Resource, ObjectResource) {
 
   // TODO: update? prepend, replace, remove, etc?
 
-  Resource.registerResourceClass(CollectionResource);
+  resourceClassRegistry.register(CollectionResource);
 
   return CollectionResource;
 });
