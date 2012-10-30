@@ -11,20 +11,17 @@ define(['./Resource', './ObjectResource', './registry'],
   ObjectClassResource.prototype = Object.create(Resource.prototype);
   ObjectClassResource.prototype.constructor = Resource;
 
-  ObjectClassResource.prototype.contentType = contentType
-
 
   ObjectClassResource.prototype.create = function(data) {
     return this.post(data).then(function(body) {
       // FIXME: auto cast to correct subclass? or use ObjectResource?
-      // return new Resource(body.uri, body).as(ObjectResource)
-      var contentType = ObjectResource.prototype.contentType
-      return this._cache.byUriAndContentType(body.uri, contentType, body);
+      return this._cache.byUriAndClass(body.uri, ObjectResource, body);
     }.bind(this));
   };
 
   ObjectClassResource.prototype.getByKey = function(keyValue) {
     return this.follow('item', keyValue).then(function(itemResource) {
+      // FIXME: fetch() implied? doesn't auto-get an ObjectResource?
       return itemResource.fetch().then(function(resource) {
         console.log("objectclass getById", resource, keyValue)
         return resource
@@ -33,7 +30,7 @@ define(['./Resource', './ObjectResource', './registry'],
     // FIXME: errback: not supported?
   };
 
-  resourceClassRegistry.register(ObjectClassResource);
+  resourceClassRegistry.register(ObjectClassResource, contentType);
 
   return ObjectClassResource;
 });

@@ -17,8 +17,6 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
     // TODO: manage cache PUT, subclasses may disable and manually override
   };
 
-  // Resource.prototype.contentType = 'application/json'
-
 
   /**
    * @param options: fromCache - only read from the cache, don't fetch the resource
@@ -129,22 +127,23 @@ define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
 
       var link = uriTemplate(rawLink, params);
 
-      var contentType;
+      var resource;
       if (options.as) {
-        contentType = options.as.prototype.contentType;
+        resource = this._cache.byUriAndClass(link, options.as);
+      } else {
+        resource = this._cache.byUri(link);
       }
 
-      if (options.lazy) {
-        return this._cache.byUriAndContentType(link, contentType);
-      } else {
-        return this._cache.byUriAndContentType(link, contentType).fetch();
+      if (!options.lazy) {
+        resource = resource.fetch();
       }
+
+      return resource;
     }.bind(this));
   };
 
   Resource.prototype.as = function(resourceClass) {
-    var contentType = resourceClass.prototype.contentType;
-    return this._cache.byUriAndContentType(this.uri, contentType, this._data);
+    return this._cache.byUriAndClass(this.uri, resourceClass, this._data);
   };
 
   return Resource;

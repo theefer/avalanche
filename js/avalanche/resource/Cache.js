@@ -60,5 +60,27 @@ define(['./registry'], function(resourceClassRegistry) {
     return resource;
   };
 
+  ResourceCache.prototype.byUriAndClass = function(uri, resourceClass, data) {
+    if (!uri) {
+      throw new Error('Cannot make a Resource without a URI!');
+    }
+
+    var contentType = resourceClassRegistry.contentTypeForClass(resourceClass);
+
+    var resource = this._lookup(uri, contentType);
+    if (!resource) {
+      resource = new resourceClass(uri, data, this.resourceOptions);
+      console.log("MAKE NEW", resource, uri, contentType, data)
+      this._store(uri, contentType, resource);
+      this._store(uri, NO_CONTENT_TYPE, resource);
+      // FIXME: is this working? what if setup with another content type before, etc?
+    }
+    else {
+      console.log("RECYCLE", resource, uri, contentType, data)
+    }
+
+    return resource;
+  };
+
   return ResourceCache;
 });

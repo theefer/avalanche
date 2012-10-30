@@ -11,8 +11,6 @@ define(['./Resource', './registry'],
   ObjectResource.prototype = Object.create(Resource.prototype);
   ObjectResource.prototype.constructor = Resource;
 
-  ObjectResource.prototype.contentType = contentType
-
 
   ObjectResource.prototype.read = function(params, options) {
     return this.get(params, options).then(function(body) {
@@ -35,7 +33,7 @@ define(['./Resource', './registry'],
     });
   };
 
-  resourceClassRegistry.register(ObjectResource);
+  resourceClassRegistry.register(ObjectResource, contentType);
 
   return ObjectResource;
 });
