@@ -1,4 +1,6 @@
-define(['./resource/Resource', './resource/Cache'], function(Resource, ResourceCache) {
+define(['./resource/Resource', './resource/Cache',
+        './compat/bind', './compat/object_create'],
+       function(Resource, ResourceCache) {
 
   /**
    * Example:
