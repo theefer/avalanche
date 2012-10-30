@@ -11,9 +11,19 @@ define(function() {
     jsonp: 'application/javascript, text/javascript, */*'
   };
 
-  return function(uri, options) {
+  // FIXME: stick methods on prototype instead?
+
+  return function(httpAdapter, uri, options) {
 
     options = options || {};
+
+    if (!httpAdapter) {
+      throw new Error('Http constructor called without an httpAdapter');
+    }
+
+    if (!uri) {
+      throw new Error('Http constructor called without a URI');
+    }
 
     if (options.type && !typeAcceptMap[options.type]) {
       throw new Error('Resource constructed with an invalid type: ', options.type);
@@ -31,9 +41,6 @@ define(function() {
       for (k in options)     { o[k] = options[k];     }
       return o;
     }
-
-    // FIXME: or throw error if none provided
-    var httpAdapter = options.httpAdapter
 
     /**
      * @return a new Promise(data)

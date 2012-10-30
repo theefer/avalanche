@@ -1,13 +1,13 @@
 define(['../http/Http', 'promise', '../util/oneAtATime', '../util/uriTemplate'],
        function(Http, Promise, oneAtATime, uriTemplate) {
 
-  var Resource = function(uri, data, options) {
+  var Resource = function(uri, options, data) {
     this.uri = uri;
     this._data = data;
 // FIXME: init contentType of data
 
     // TODO: document options: type, accept, adapter
-    this._backend = new Http(uri, options);
+    this._backend = new Http(options.httpAdapter, uri, options);
 
     this._cache = options.cache;
 

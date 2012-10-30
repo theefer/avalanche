@@ -3,14 +3,11 @@ define(['avalanche/resource/Resource'], function(Resource) {
     var resource;
 
     beforeEach(function() {
-      resource = new Resource('/some/uri');
+      resource = new Resource('/some/uri', {httpAdapter: {}});
     });
 
     it("should be able to create a Resource", function() {
       expect(!!resource).toEqual(true);
-
-      // //demonstrates use of custom matcher
-      // expect(player).toBePlaying(song);
     });
 
     // TODO: get

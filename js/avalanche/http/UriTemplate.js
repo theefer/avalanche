@@ -4,7 +4,7 @@ define(function() {
     return template.replace(/{(.*?)}/g, function(match, varName) {
       var val = params[varName];
       if (!val) {
-        throw new Error("Missing parameter for URI template variable: " + varName)
+        throw new Error("Missing parameter for URI template variable: " + varName);
       }
       return val;
     });

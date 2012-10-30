@@ -2,13 +2,30 @@ define(['avalanche/http/Http'], function(Http) {
   var uri = '/some/uri';
 
   describe("Http", function() {
-    var http;
+    var adapter;
+    var uri;
 
     beforeEach(function() {
-      http = new Http(uri);
+      adapter = createSpyAdapter();
+      uri = '/test';
     });
 
-    it("should be able to create an Http client", function() {
+    it("should fail to create Http client without an adapter", function() {
+      function create() {
+        new Http();
+      }
+      expect(create).toThrow();
+    });
+
+    it("should fail to create Http client without a URI", function() {
+      function create() {
+        new Http(adapter);
+      }
+      expect(create).toThrow();
+    });
+
+    it("should successfully create an Http client", function() {
+      var http = new Http(adapter, uri);
       expect(!!http).toEqual(true);
     });
 
@@ -21,7 +38,7 @@ define(['avalanche/http/Http'], function(Http) {
 
     beforeEach(function() {
       adapter = createSpyAdapter();
-      http = new Http(uri, {adapter: adapter});
+      http = new Http(adapter, uri);
 
       resp = new Object;
       spyOn(adapter, 'get').andReturn(resp);

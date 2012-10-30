@@ -28,7 +28,7 @@ define(['./registry'], function(resourceClassRegistry) {
 
     var resource = this._lookup(uri, NO_CONTENT_TYPE);
     if (!resource) {
-      resource = new this.defaultResourceClass(uri, undefined, this.resourceOptions);
+      resource = new this.defaultResourceClass(uri, this.resourceOptions);
       this._store(uri, NO_CONTENT_TYPE, resource);
       console.log("MAKE NEW", resource, uri)
     }
@@ -47,7 +47,7 @@ define(['./registry'], function(resourceClassRegistry) {
     var resource = this._lookup(uri, contentType);
     if (!resource) {
       var resourceClass = resourceClassRegistry[contentType] || this.defaultResourceClass;
-      resource = new resourceClass(uri, data, this.resourceOptions);
+      resource = new resourceClass(uri, this.resourceOptions, data);
       console.log("MAKE NEW", resource, uri, contentType, data)
       this._store(uri, contentType, resource);
       this._store(uri, NO_CONTENT_TYPE, resource);
@@ -69,7 +69,7 @@ define(['./registry'], function(resourceClassRegistry) {
 
     var resource = this._lookup(uri, contentType);
     if (!resource) {
-      resource = new resourceClass(uri, data, this.resourceOptions);
+      resource = new resourceClass(uri, this.resourceOptions, data);
       console.log("MAKE NEW", resource, uri, contentType, data)
       this._store(uri, contentType, resource);
       this._store(uri, NO_CONTENT_TYPE, resource);
